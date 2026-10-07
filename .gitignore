@@ -1,0 +1,18 @@
+node_modules
+dist
+dist-ssr
+*.tsbuildinfo
+*.local
+.firebase
+.vite
+.DS_Store
+*.log
+npm-debug.log*
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# State lokal Wrangler (D1/R2 lokal) & dev vars Worker
+worker-upload/node_modules
+worker-upload/.wrangler
+worker-upload/.dev.vars

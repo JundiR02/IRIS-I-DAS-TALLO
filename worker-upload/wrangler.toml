@@ -1,0 +1,12 @@
+name = "iris-i-tallo-upload"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+[[r2_buckets]]
+binding = "FOTO_BUCKET"
+bucket_name = "iris-i-tallo-foto"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "iris-i-tallo-db"
+database_id = "cafca588-73f9-4ad0-a67e-8ba568bc2438"

@@ -1,0 +1,69 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Stage behind the phone — subtle basin texture */
+  background:
+    radial-gradient(1100px 600px at 20% -10%, #dfeadf 0%, transparent 60%),
+    radial-gradient(900px 700px at 110% 20%, #e8ecdd 0%, transparent 55%),
+    #e7e3d7;
+  color: #1b2a22;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* The device viewport scrolls internally; hide its scrollbar for a native feel */
+.app-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.app-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Screen enter transition used by the router outlet */
+.screen-enter {
+  animation: screen-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes screen-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Equalizer bars for the voice-note recorder */
+.eq-bar {
+  transform-origin: bottom;
+  animation: eq 0.9s ease-in-out infinite;
+}
+@keyframes eq {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
