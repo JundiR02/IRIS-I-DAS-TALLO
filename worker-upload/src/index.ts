@@ -327,6 +327,25 @@ function inisialDari(nama: string): string {
   return ((kata[0]?.[0] ?? '?') + (kata.length > 1 ? kata[kata.length - 1][0] : kata[0]?.[1] ?? '')).toUpperCase()
 }
 
+/** PIN warga: 6–8 digit, bukan angka kembar/berurutan (111111, 123456, 987654). */
+function cekPinBaru(pin: string): string | null {
+  if (!/^\d{6,8}$/.test(pin)) return 'PIN baru harus 6–8 angka.'
+  const d = [...pin].map(Number)
+  const langkah = d.slice(1).map((x, i) => x - d[i])
+  if (langkah.every((x) => x === 0) || langkah.every((x) => x === 1) || langkah.every((x) => x === -1)) {
+    return 'PIN terlalu mudah ditebak (angka kembar/berurutan). Pilih yang lain.'
+  }
+  return null
+}
+
+function cekKataSandiBaru(sandi: string, username: string | null): string | null {
+  if (sandi.length < 8) return 'Kata sandi baru minimal 8 karakter.'
+  if (sandi.length > 128) return 'Kata sandi terlalu panjang (maks 128).'
+  const nama = username?.split('@')[0] ?? ''
+  if (nama.length >= 3 && sandi.toLowerCase().includes(nama)) return 'Kata sandi jangan memuat username/email Anda.'
+  return null
+}
+
 // Username peneliti/admin — boleh berupa alamat email.
 const USERNAME_VALID = /^[a-z0-9._+@-]{3,64}$/
 const PESAN_USERNAME = 'Username/email 3–64 karakter: huruf kecil, angka, titik, strip, @.'
@@ -392,6 +411,53 @@ export default {
       if (!akun) return err(cors, 401, SESI_TIDAK_VALID)
       const row = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(akun.id).first<BarisAkun>()
       return json(cors, 200, profilKeJson(row!))
+    }
+
+    // Ganti PIN/kata sandi sendiri (semua peran). Wajib menyertakan sandi lama.
+    // Sesi lain dicabut (token_versi naik), perangkat ini dapat token baru.
+    if (request.method === 'POST' && url.pathname === '/auth/ganti-rahasia') {
+      const akun = await wargaDariRequest(request, env)
+      if (!akun) return err(cors, 401, SESI_TIDAK_VALID)
+      const b = (await request.json().catch(() => null)) as { lama?: string; baru?: string } | null
+      if (typeof b?.lama !== 'string' || typeof b?.baru !== 'string' || !b.lama || !b.baru) {
+        return err(cors, 400, 'Isi sandi lama dan sandi baru.')
+      }
+      const row = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(akun.id).first<BarisAkun>()
+      if (!row) return err(cors, 401, SESI_TIDAK_VALID)
+
+      const kunci = `ganti:${row.id}`
+      const batasWaktu = new Date(Date.now() - JENDELA_PERCOBAAN_MENIT * 60_000).toISOString()
+      const percobaan = await env.DB.prepare('SELECT COUNT(*) as n FROM login_attempts WHERE kunci = ? AND waktu > ?')
+        .bind(kunci, batasWaktu)
+        .first<{ n: number }>()
+      if ((percobaan?.n ?? 0) >= MAKS_PERCOBAAN_LOGIN) {
+        return err(cors, 429, 'Terlalu banyak percobaan gagal. Coba lagi dalam beberapa menit.')
+      }
+      if (!(await cocokkanRahasia(row.id, b.lama, row.pin_hash))) {
+        await env.DB.prepare('INSERT INTO login_attempts (no_urut, kunci, waktu) VALUES (?, ?, ?)')
+          .bind(-1, kunci, new Date().toISOString())
+          .run()
+        return err(cors, 401, row.peran === 'warga' ? 'PIN lama salah.' : 'Kata sandi lama salah.')
+      }
+
+      const masalah = row.peran === 'warga' ? cekPinBaru(b.baru) : cekKataSandiBaru(b.baru, row.username)
+      if (masalah) return err(cors, 400, masalah)
+      if (b.baru === b.lama) return err(cors, 400, 'Sandi baru harus berbeda dari yang lama.')
+
+      await env.DB.prepare('UPDATE warga_auth SET pin_hash = ?, token_versi = token_versi + 1 WHERE id = ?')
+        .bind(await hashRahasia(b.baru), row.id)
+        .run()
+      const token = await buatToken(
+        {
+          id: row.id,
+          noUrut: row.no_urut,
+          peran: row.peran,
+          v: row.token_versi + 1,
+          exp: Math.floor(Date.now() / 1000) + UMUR_TOKEN_DETIK,
+        },
+        env.AUTH_TOKEN_SECRET,
+      )
+      return json(cors, 200, { token, warga: profilKeJson(row) })
     }
 
     // Direktori publik (nama/avatar/kelurahan) — pengganti daftar WARGA yang

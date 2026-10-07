@@ -265,7 +265,10 @@ VITE_UPLOAD_URL=http://127.0.0.1:8787 npm run dev
 - PIN demo warga **ditulis di kode sumber** (`schema.sql`, `DemoPanel.tsx`) dan
   repo ini publik — reset semuanya
   dari Panel (Pengguna → Reset) sebelum distribusi sungguhan ke 40 responden.
-- Belum ada fitur ganti kata sandi sendiri; peneliti/admin minta admin lain menekan *Reset*.
+- **Ganti sandi sendiri**: masyarakat lewat Profil → *Ganti PIN* (6–8 angka, bukan
+  angka kembar/berurutan); peneliti lewat Profil atau Panel; admin lewat Panel →
+  *Ganti kata sandi* (min. 8 karakter). Wajib sandi lama; perangkat lain otomatis
+  keluar (`POST /auth/ganti-rahasia`). Profil juga punya tombol *Keluar dari akun*.
 
 ---
 

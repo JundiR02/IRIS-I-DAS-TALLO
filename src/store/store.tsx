@@ -27,6 +27,7 @@ import {
   buatLaporan,
   ambilDirektori,
   ambilSaya,
+  gantiRahasia as apiGantiRahasia,
   loginDenganUsername,
   loginMasyarakat,
   toggleSukaLaporanApi,
@@ -493,6 +494,8 @@ interface StoreValue {
     loginMasyarakat: (noUrut: number, pin: string) => Promise<void>
     /** Peneliti: username + kata sandi. */
     loginPeneliti: (username: string, password: string) => Promise<void>
+    /** Ganti PIN (warga) / kata sandi (peneliti) sendiri; sesi di perangkat lain keluar. */
+    gantiRahasia: (lama: string, baru: string) => Promise<void>
     logout: () => void
     tambahLaporan: (draft: DraftLaporan) => void
     /** Coba kirim ulang laporan yang masih tersimpan lokal (offline) ke server. */
@@ -676,6 +679,10 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         },
         loginPeneliti: async (username, password) => {
           dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await loginDenganUsername('peneliti', username, password)) })
+        },
+        gantiRahasia: async (lama, baru) => {
+          if (!state.auth) throw new ApiError(401, 'Belum masuk.')
+          dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await apiGantiRahasia(state.auth.token, lama, baru)) })
         },
         logout: () => dispatch({ type: 'LOGOUT' }),
         tambahLaporan: (draft) => {

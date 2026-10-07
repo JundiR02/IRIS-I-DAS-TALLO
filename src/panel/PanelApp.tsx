@@ -1,5 +1,8 @@
 import { NavLink, Navigate, Route, Routes } from 'react-router-dom'
-import { LayoutDashboard, ClipboardCheck, MessagesSquare, Users, LogOut, RefreshCw, Smartphone } from 'lucide-react'
+import { useState } from 'react'
+import { LayoutDashboard, ClipboardCheck, MessagesSquare, Users, LogOut, RefreshCw, Smartphone, KeyRound } from 'lucide-react'
+import { gantiRahasia } from '../lib/api'
+import FormGantiSandi from '../components/FormGantiSandi'
 import Logo from '../components/Logo'
 import Avatar from '../components/Avatar'
 import { PanelProvider, usePanel } from './usePanel'
@@ -8,7 +11,7 @@ import TabRingkasan from './TabRingkasan'
 import TabLaporan from './TabLaporan'
 import TabKomentar from './TabKomentar'
 import TabPengguna from './TabPengguna'
-import { BadgePeran } from './ui'
+import { BadgePeran, Modal } from './ui'
 
 const NAV = [
   { to: '/panel', label: 'Ringkasan', Ikon: LayoutDashboard, end: true, admin: false },
@@ -18,7 +21,8 @@ const NAV = [
 ]
 
 function KerangkaPanel() {
-  const { sesi, isAdmin, keluar, muatUlang, memuat, galat, notif, ringkasan } = usePanel()
+  const { sesi, isAdmin, keluar, masuk, muatUlang, memuat, galat, notif, ringkasan } = usePanel()
+  const [gantiSandi, setGantiSandi] = useState(false)
   if (!sesi) return <PanelLogin />
 
   const nav = NAV.filter((n) => !n.admin || isAdmin)
@@ -33,8 +37,15 @@ function KerangkaPanel() {
           </span>
           <span className="text-[11px] font-bold uppercase tracking-wider text-white/60">Panel</span>
           <button
-            onClick={() => keluar()}
+            onClick={() => setGantiSandi(true)}
             className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
+            aria-label="Ganti kata sandi"
+          >
+            <KeyRound size={16} />
+          </button>
+          <button
+            onClick={() => keluar()}
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
             aria-label="Keluar"
           >
             <LogOut size={16} />
@@ -68,7 +79,13 @@ function KerangkaPanel() {
               <BadgePeran peran={sesi.akun.peran} />
             </div>
           </div>
-          <div className="mt-3 flex gap-2">
+          <button
+            onClick={() => setGantiSandi(true)}
+            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20"
+          >
+            <KeyRound size={13} /> Ganti kata sandi
+          </button>
+          <div className="mt-2 flex gap-2">
             <a href="#/" className="flex flex-1 items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20">
               <Smartphone size={13} /> Aplikasi
             </a>
@@ -103,6 +120,19 @@ function KerangkaPanel() {
           </Routes>
         </div>
       </main>
+
+      {gantiSandi && (
+        <Modal judul="Ganti kata sandi" onTutup={() => setGantiSandi(false)} lebar="max-w-sm">
+          <FormGantiSandi
+            jenis="sandi"
+            kirim={async (lama, baru) => {
+              const s = await gantiRahasia(sesi.token, lama, baru)
+              masuk({ token: s.token, akun: s.warga })
+            }}
+            onSelesai={() => setGantiSandi(false)}
+          />
+        </Modal>
+      )}
 
       {notif && (
         <div

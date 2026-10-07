@@ -70,6 +70,15 @@ export function loginDenganUsername(
   })
 }
 
+/** Ganti PIN/kata sandi sendiri. Sesi lain keluar; token baru untuk perangkat ini. */
+export function gantiRahasia(token: string, lama: string, baru: string): Promise<SesiWarga> {
+  return permintaan<SesiWarga>('/auth/ganti-rahasia', {
+    method: 'POST',
+    headers: withAuth(token),
+    body: JSON.stringify({ lama, baru }),
+  })
+}
+
 export function ambilSaya(token: string): Promise<ProfilApi> {
   return permintaan<ProfilApi>('/auth/saya', { headers: withAuth(token) })
 }

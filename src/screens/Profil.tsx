@@ -11,6 +11,8 @@ import {
   ChevronRight,
   TrendingUp,
   Info,
+  KeyRound,
+  LogOut,
 } from 'lucide-react'
 import { useApp } from '../store/store'
 import { IMPACT, PERINGKAT_DESA, TREN_PAMPANG, titikById } from '../data/seed'
@@ -22,6 +24,7 @@ import Sparkline from '../components/Sparkline'
 import StatusPill from '../components/StatusPill'
 import FotoLaporan from '../components/FotoLaporan'
 import Sheet from '../components/Sheet'
+import FormGantiSandi from '../components/FormGantiSandi'
 
 const RINCIAN_POIN = [
   { label: 'Laporan diverifikasi peneliti', poin: '+50' },
@@ -41,9 +44,11 @@ const SEMUA_BADGE = [
 
 export default function Profil() {
   const navigate = useNavigate()
-  const { me, state, actions } = useApp()
+  const { me, state, actions, masuk } = useApp()
   const titik = titikById(me.titikId)
   const [infoPoinOpen, setInfoPoinOpen] = useState(false)
+  const [gantiSandiOpen, setGantiSandiOpen] = useState(false)
+  const pakaiPin = state.auth?.peran !== 'peneliti'
 
   const riwayat = useMemo(
     () =>
@@ -305,12 +310,46 @@ export default function Profil() {
             </span>
             <ChevronRight size={16} className="text-ink-faint" />
           </button>
+
+          {masuk && (
+            <>
+              <button
+                onClick={() => setGantiSandiOpen(true)}
+                className="flex w-full items-center justify-between border-t border-bone-100 py-2.5 text-[13px] font-semibold text-ink-soft"
+              >
+                <span className="flex items-center gap-2">
+                  <KeyRound size={16} /> {pakaiPin ? 'Ganti PIN' : 'Ganti kata sandi'}
+                </span>
+                <ChevronRight size={16} className="text-ink-faint" />
+              </button>
+              <button
+                onClick={() => actions.logout()}
+                className="flex w-full items-center gap-2 border-t border-bone-100 py-2.5 text-[13px] font-semibold text-bahaya-ink"
+              >
+                <LogOut size={16} /> Keluar dari akun
+              </button>
+            </>
+          )}
         </section>
 
         <p className="pb-2 text-center text-[10px] text-ink-faint">
           IRIS-I · Prototipe sisi warga · Sungai Tallo, Makassar
         </p>
       </div>
+
+      <Sheet
+        open={gantiSandiOpen}
+        onClose={() => setGantiSandiOpen(false)}
+        title={pakaiPin ? 'Ganti PIN' : 'Ganti kata sandi'}
+      >
+        {gantiSandiOpen && (
+          <FormGantiSandi
+            jenis={pakaiPin ? 'pin' : 'sandi'}
+            kirim={actions.gantiRahasia}
+            onSelesai={() => setGantiSandiOpen(false)}
+          />
+        )}
+      </Sheet>
 
       <Sheet open={infoPoinOpen} onClose={() => setInfoPoinOpen(false)} title="Cara kerja poin">
         <div className="space-y-2">
