@@ -183,8 +183,17 @@ export default function TabPengguna() {
       {reset && (
         <Modal judul={reset.peran === 'warga' ? 'Reset PIN?' : 'Reset kata sandi?'} onTutup={() => setReset(null)}>
           <p className="text-sm text-ink-soft">
-            {reset.peran === 'warga' ? 'PIN' : 'Kata sandi'} baru akan dibuat untuk <b>{reset.nama}</b>. Semua sesi yang sedang
-            masuk dengan akun ini (mis. HP yang hilang) akan langsung keluar.
+            {reset.id === sesi?.akun.id ? (
+              <>
+                Kata sandi baru akan dibuat untuk akun <b>Anda sendiri</b> dan hanya ditampilkan sekali —{' '}
+                <b>catat sebelum menutup jendelanya</b>. Kata sandi lama langsung tidak berlaku.
+              </>
+            ) : (
+              <>
+                {reset.peran === 'warga' ? 'PIN' : 'Kata sandi'} baru akan dibuat untuk <b>{reset.nama}</b>. Semua sesi yang
+                sedang masuk dengan akun ini (mis. HP yang hilang) akan langsung keluar.
+              </>
+            )}
           </p>
           <div className="mt-5 flex justify-end gap-2">
             <button onClick={() => setReset(null)} className={BTN.sekunder}>

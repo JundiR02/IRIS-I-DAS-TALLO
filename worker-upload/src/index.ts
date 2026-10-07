@@ -713,8 +713,10 @@ export default {
         // semua sesi lama (mis. HP yang hilang) langsung keluar.
         if (request.method === 'POST' && akunMatch[2]) {
           const rahasia = row.peran === 'warga' ? buatPin() : buatKataSandi()
-          await env.DB.prepare('UPDATE warga_auth SET pin_hash = ?, token_versi = token_versi + 1 WHERE id = ?')
-            .bind(await hashRahasia(rahasia), id)
+          // Reset akun sendiri = ganti kata sandi; sesi yang sedang dipakai tetap
+          // jalan supaya kata sandi baru sempat dicatat sebelum keluar.
+          await env.DB.prepare('UPDATE warga_auth SET pin_hash = ?, token_versi = token_versi + ? WHERE id = ?')
+            .bind(await hashRahasia(rahasia), id === admin!.id ? 0 : 1, id)
             .run()
           return json(cors, 200, { rahasia })
         }
