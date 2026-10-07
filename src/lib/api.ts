@@ -241,9 +241,9 @@ export function buatAkun(token: string, draft: DraftAkunApi): Promise<{ akun: Ak
 export function ubahAkun(
   token: string,
   id: string,
-  data: Partial<Pick<AkunAdminApi, 'nama' | 'noUrut' | 'kelurahan' | 'titikId' | 'aktif'>>,
-): Promise<AkunAdminApi> {
-  return permintaan<AkunAdminApi>(`/admin/akun/${encodeURIComponent(id)}`, {
+  data: Partial<Pick<AkunAdminApi, 'nama' | 'noUrut' | 'kelurahan' | 'titikId' | 'aktif' | 'peran' | 'username'>>,
+): Promise<AkunAdminApi & { rahasiaBaru?: string }> {
+  return permintaan(`/admin/akun/${encodeURIComponent(id)}`, {
     method: 'PATCH',
     headers: withAuth(token),
     body: JSON.stringify(data),

@@ -327,6 +327,18 @@ function inisialDari(nama: string): string {
   return ((kata[0]?.[0] ?? '?') + (kata.length > 1 ? kata[kata.length - 1][0] : kata[0]?.[1] ?? '')).toUpperCase()
 }
 
+// Username peneliti/admin — boleh berupa alamat email.
+const USERNAME_VALID = /^[a-z0-9._+@-]{3,64}$/
+const PESAN_USERNAME = 'Username/email 3–64 karakter: huruf kecil, angka, titik, strip, @.'
+
+/** Peneliti/admin tidak ikut rotasi; nomor urut cuma pengisi unik (9001+ / 1+). */
+async function noUrutBerikutnya(env: Env, peran: Peran): Promise<number> {
+  const maks = await env.DB.prepare('SELECT MAX(no_urut) AS m FROM warga_auth WHERE peran = ?')
+    .bind(peran)
+    .first<{ m: number | null }>()
+  return Math.max(maks?.m ?? 0, peran === 'peneliti' ? 9000 : 0) + 1
+}
+
 const WARNA_AVATAR = ['#2F5D3A', '#B0623B', '#2C5F91', '#6C4A70', '#B98A2E', '#2E7D74', '#A8455B', '#4A5560']
 const STATUS_VALID = ['aman', 'waspada', 'bahaya']
 
@@ -661,14 +673,8 @@ export default {
           if (typeof b?.titikId !== 'string' || !b.titikId) return err(cors, 400, 'Titik pantau wajib dipilih.')
         } else {
           username = typeof b?.username === 'string' ? b.username.trim().toLowerCase() : ''
-          if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
-            return err(cors, 400, 'Username 3–32 karakter: huruf kecil, angka, titik, strip.')
-          }
-          // Peneliti/admin tidak ikut rotasi; nomor urut cuma pengisi unik (9001+, 1+).
-          const maks = await env.DB.prepare('SELECT MAX(no_urut) AS m FROM warga_auth WHERE peran = ?')
-            .bind(peran)
-            .first<{ m: number | null }>()
-          noUrut = Math.max(maks?.m ?? 0, peran === 'peneliti' ? 9000 : 0) + 1
+          if (!USERNAME_VALID.test(username)) return err(cors, 400, PESAN_USERNAME)
+          noUrut = await noUrutBerikutnya(env, peran)
         }
 
         const id = `${peran === 'warga' ? 'w' : peran === 'peneliti' ? 'p' : 'adm'}-${crypto.randomUUID().slice(0, 8)}`
@@ -718,33 +724,60 @@ export default {
           if (!b) return err(cors, 400, 'Data tidak valid.')
           if (id === admin!.id && b.aktif === false) return err(cors, 400, 'Tidak bisa menonaktifkan akun Anda sendiri.')
 
+          // Ganti peran (mis. masyarakat → peneliti). Cara masuknya ikut berubah
+          // (nomor urut + PIN ↔ username + kata sandi), jadi kredensial baru
+          // dibuat dan semua sesi lama dicabut.
+          const peranBaru = (b.peran ?? row.peran) as Peran
+          if (!['warga', 'peneliti', 'admin'].includes(peranBaru)) return err(cors, 400, 'Peran tidak valid.')
+          const gantiPeran = peranBaru !== row.peran
+          if (gantiPeran && id === admin!.id) return err(cors, 400, 'Tidak bisa mengubah peran akun Anda sendiri.')
+
           const nama = typeof b.nama === 'string' && b.nama.trim() ? b.nama.trim() : row.nama
           let noUrut = row.no_urut
-          if (row.peran === 'warga' && b.noUrut !== undefined) {
-            noUrut = Number(b.noUrut)
-            if (!Number.isInteger(noUrut) || noUrut < 1 || noUrut > 40) return err(cors, 400, 'Nomor urut harus 1–40.')
+          let username = row.username
+          let titikId = typeof b.titikId === 'string' ? b.titikId || null : row.titik_id
+          if (peranBaru === 'warga') {
+            if (b.noUrut !== undefined || gantiPeran) {
+              noUrut = Number(b.noUrut)
+              if (!Number.isInteger(noUrut) || noUrut < 1 || noUrut > 40) return err(cors, 400, 'Nomor urut harus 1–40.')
+            }
+            if (gantiPeran && !titikId) return err(cors, 400, 'Titik pantau wajib dipilih untuk akun masyarakat.')
+            // Masyarakat masuk pakai nomor urut; username/email lamanya dilepas.
+            if (gantiPeran) username = null
+          } else {
+            if (typeof b.username === 'string' && b.username.trim()) username = b.username.trim().toLowerCase()
+            if (!username || !USERNAME_VALID.test(username)) return err(cors, 400, PESAN_USERNAME)
+            if (gantiPeran) noUrut = await noUrutBerikutnya(env, peranBaru)
           }
+          const rahasia = gantiPeran ? (peranBaru === 'warga' ? buatPin() : buatKataSandi()) : null
           const aktif = typeof b.aktif === 'boolean' ? (b.aktif ? 1 : 0) : row.aktif
           try {
             await env.DB.prepare(
-              `UPDATE warga_auth SET nama = ?, inisial = ?, no_urut = ?, kelurahan = ?, titik_id = ?, aktif = ?,
-                 token_versi = token_versi + ? WHERE id = ?`,
+              `UPDATE warga_auth SET peran = ?, nama = ?, inisial = ?, no_urut = ?, username = ?, kelurahan = ?, titik_id = ?,
+                 aktif = ?, pin_hash = COALESCE(?, pin_hash), token_versi = token_versi + ? WHERE id = ?`,
             ).bind(
+              peranBaru,
               nama,
               nama !== row.nama ? inisialDari(nama ?? id) : row.inisial,
               noUrut,
+              username,
               typeof b.kelurahan === 'string' ? b.kelurahan.trim() || '-' : row.kelurahan,
-              typeof b.titikId === 'string' ? b.titikId || null : row.titik_id,
+              titikId,
               aktif,
-              // Menonaktifkan = cabut semua sesi yang sedang berjalan.
-              row.aktif && !aktif ? 1 : 0,
+              rahasia ? await hashRahasia(rahasia) : null,
+              // Menonaktifkan / ganti peran = cabut semua sesi yang sedang berjalan.
+              (row.aktif && !aktif) || gantiPeran ? 1 : 0,
               id,
             ).run()
           } catch {
-            return err(cors, 409, `Nomor urut ${noUrut} sudah dipakai warga lain.`)
+            return err(
+              cors,
+              409,
+              peranBaru === 'warga' ? `Nomor urut ${noUrut} sudah dipakai warga lain.` : `Username "${username}" sudah dipakai.`,
+            )
           }
           const baru = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(id).first<BarisAkun>()
-          return json(cors, 200, akunKeJson(baru!))
+          return json(cors, 200, { ...akunKeJson(baru!), ...(rahasia ? { rahasiaBaru: rahasia } : {}) })
         }
       }
 

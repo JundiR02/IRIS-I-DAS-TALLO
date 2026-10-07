@@ -215,10 +215,11 @@ function FormAkun({
   onTutup: () => void
   onBaru: (k: Kredensial) => void
 }) {
-  const { jalankan, setAkun, beriNotif, muatUlang } = usePanel()
+  const { jalankan, setAkun, beriNotif, muatUlang, sesi } = usePanel()
+  const bolehGantiPeran = !awal || awal.id !== sesi?.akun.id
   const [peran, setPeran] = useState<Peran>(awal?.peran ?? peranAwal)
   const [nama, setNama] = useState(awal?.nama ?? '')
-  const [noUrut, setNoUrut] = useState(String(awal?.noUrut ?? nomorKosong[0] ?? ''))
+  const [noUrut, setNoUrut] = useState(String(awal?.peran === 'warga' ? awal.noUrut : (nomorKosong[0] ?? '')))
   const [username, setUsername] = useState(awal?.username ?? '')
   const [titikId, setTitikId] = useState(awal?.titikId ?? '')
   const [kelurahan, setKelurahan] = useState(awal?.kelurahan === '-' ? '' : (awal?.kelurahan ?? ''))
@@ -226,6 +227,9 @@ function FormAkun({
   const [error, setError] = useState<string | null>(null)
 
   const warga = peran === 'warga'
+  const gantiPeran = !!awal && peran !== awal.peran
+  // Username hanya bisa diisi saat akun belum punya (baru, atau naik dari masyarakat).
+  const usernameTerkunci = !!awal?.username
 
   const submit = async (e: FormEvent) => {
     e.preventDefault()
@@ -233,8 +237,8 @@ function FormAkun({
     if (!nama.trim()) return setError('Nama wajib diisi.')
     if (warga && !titikId) return setError('Pilih titik pantau responden.')
     if (warga && !(Number(noUrut) >= 1 && Number(noUrut) <= 40)) return setError('Nomor urut harus 1–40.')
-    if (!warga && !awal && !/^[a-z0-9._-]{3,32}$/.test(username.trim().toLowerCase())) {
-      return setError('Username 3–32 karakter: huruf kecil, angka, titik, strip.')
+    if (!warga && !usernameTerkunci && !/^[a-z0-9._+@-]{3,64}$/.test(username.trim().toLowerCase())) {
+      return setError('Username/email 3–64 karakter: huruf kecil, angka, titik, strip, @.')
     }
     setKirim(true)
     if (awal) {
@@ -242,15 +246,22 @@ function FormAkun({
         ubahAkun(token, awal.id, {
           nama: nama.trim(),
           kelurahan: kelurahan.trim(),
-          ...(warga ? { noUrut: Number(noUrut), titikId } : {}),
+          ...(gantiPeran ? { peran } : {}),
+          ...(warga ? { noUrut: Number(noUrut), titikId } : usernameTerkunci ? {} : { username: username.trim().toLowerCase() }),
         }),
       )
       setKirim(false)
       if (!baru) return
-      setAkun((xs) => xs.map((x) => (x.id === baru.id ? baru : x)))
-      beriNotif('Data akun disimpan.')
+      const { rahasiaBaru, ...akunBaru } = baru
+      setAkun((xs) => xs.map((x) => (x.id === akunBaru.id ? akunBaru : x)))
       void muatUlang()
-      onTutup()
+      if (rahasiaBaru) {
+        // Ganti peran = cara masuk berubah, jadi ada PIN/kata sandi baru.
+        onBaru({ akun: akunBaru, rahasia: rahasiaBaru, baru: false })
+      } else {
+        beriNotif('Data akun disimpan.')
+        onTutup()
+      }
     } else {
       const hasil = await jalankan((token) =>
         buatAkun(token, {
@@ -271,7 +282,7 @@ function FormAkun({
   return (
     <Modal judul={awal ? `Ubah ${awal.nama}` : 'Tambah akun'} onTutup={onTutup}>
       <form onSubmit={submit} className="space-y-3">
-        {!awal && (
+        {bolehGantiPeran && (
           <div>
             <p className={LABEL}>Peran</p>
             <div className="grid grid-cols-3 gap-1 rounded-pill bg-bone-200 p-1">
@@ -339,16 +350,16 @@ function FormAkun({
         ) : (
           <div>
             <label htmlFor="f-user" className={LABEL}>
-              Username {awal && <span className="font-normal text-ink-faint">(tidak bisa diubah)</span>}
+              Username atau email {usernameTerkunci && <span className="font-normal text-ink-faint">(tidak bisa diubah)</span>}
             </label>
             <input
               id="f-user"
               value={username}
-              disabled={!!awal}
+              disabled={usernameTerkunci}
               autoCapitalize="none"
               onChange={(e) => setUsername(e.target.value.toLowerCase())}
               className={`${INPUT} font-mono disabled:bg-bone-100`}
-              placeholder="mis. rifky"
+              placeholder="mis. rifky atau nama@gmail.com"
             />
           </div>
         )}
@@ -366,6 +377,13 @@ function FormAkun({
           />
         </div>
 
+        {gantiPeran && (
+          <p className="rounded-xl bg-waspada-wash px-3 py-2 text-[12px] text-waspada-ink">
+            Peran berubah dari <b>{TAB.find((t) => t.v === awal!.peran)?.label}</b> ke <b>{TAB.find((t) => t.v === peran)?.label}</b>.
+            Cara masuknya ikut berubah ({warga ? 'nomor urut + PIN' : 'username/email + kata sandi'}), jadi{' '}
+            {warga ? 'PIN' : 'kata sandi'} baru dibuat dan sesi lamanya dikeluarkan.
+          </p>
+        )}
         {!awal && (
           <p className="rounded-xl bg-river-mist px-3 py-2 text-[12px] text-river-deep">
             {warga ? 'PIN 6 digit' : 'Kata sandi'} dibuat otomatis dan hanya ditampilkan sekali sesudah akun disimpan.
@@ -378,7 +396,7 @@ function FormAkun({
             Batal
           </button>
           <button type="submit" disabled={kirim} className={BTN.primer}>
-            {kirim ? 'Menyimpan…' : awal ? 'Simpan' : 'Buat akun'}
+            {kirim ? 'Menyimpan…' : awal ? (gantiPeran ? 'Simpan & ganti peran' : 'Simpan') : 'Buat akun'}
           </button>
         </div>
       </form>

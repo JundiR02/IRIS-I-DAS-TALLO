@@ -72,7 +72,7 @@ export default function PanelLogin() {
         <form onSubmit={submit} className="mt-4 space-y-3">
           <div>
             <label htmlFor="p-username" className={LABEL}>
-              Username
+              Username atau email
             </label>
             <input
               id="p-username"

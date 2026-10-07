@@ -124,7 +124,7 @@ export default function Login() {
           <>
             <div>
               <label htmlFor="username" className="mb-1.5 block text-[12px] font-bold text-ink-soft">
-                Username
+                Username atau email
               </label>
               <input
                 id="username"

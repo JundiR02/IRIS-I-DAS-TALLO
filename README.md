@@ -181,8 +181,8 @@ kalau belum, baru kirim datanya ke `/laporan`.
 | Peran | Masuk lewat | Endpoint | Bisa apa |
 |---|---|---|---|
 | **Masyarakat** (warga responden) | Aplikasi → tab *Masyarakat*: nomor urut + PIN | `POST /auth/masyarakat` (alias lama `/auth/login`) | Lapor, komentar, suka |
-| **Peneliti** | Aplikasi → tab *Peneliti*, atau Panel → *Peneliti*: username + kata sandi | `POST /auth/peneliti` | Semua yang warga bisa + verifikasi laporan, tulis rekomendasi, sematkan komentar (Panel) |
-| **Admin** | Panel → *Admin*: username + kata sandi | `POST /auth/admin` | Semua yang peneliti bisa + kelola akun, hapus laporan/komentar |
+| **Peneliti** | Aplikasi → tab *Peneliti*, atau Panel → *Peneliti*: username/email + kata sandi | `POST /auth/peneliti` | Semua yang warga bisa + verifikasi laporan, tulis rekomendasi, sematkan komentar (Panel) |
+| **Admin** | Panel → *Admin*: username/email + kata sandi | `POST /auth/admin` | Semua yang peneliti bisa + kelola akun, hapus laporan/komentar |
 
 Tiap pintu hanya menerima perannya sendiri (akun peneliti ditolak di `/auth/admin`).
 PIN & kata sandi baru di-hash **PBKDF2-SHA256** (100.000 iterasi); hash sha256 lama
@@ -205,6 +205,8 @@ Halaman web penuh (di luar bingkai HP) — https://iris-i-tallo.web.app/#/panel:
   komentarnya).
 - **Komentar** — sematkan/lepas (peneliti & admin), hapus (admin).
 - **Pengguna** (admin saja) — tambah akun masyarakat/peneliti/admin, ubah data,
+  **ganti peran** (mis. masyarakat → peneliti; kredensial baru dibuat & sesi lama
+  dicabut, admin tidak bisa mengubah peran dirinya sendiri),
   reset PIN/kata sandi, nonaktifkan/aktifkan. PIN (6 digit) & kata sandi dibuat
   acak oleh server dan **hanya ditampilkan sekali**. Juga menunjukkan nomor urut
   rotasi 1–40 yang belum punya responden.
@@ -227,6 +229,8 @@ npm install
 # 1. Migrasi (SEKALI saja — ALTER TABLE gagal kalau kolomnya sudah ada):
 CLOUDFLARE_API_TOKEN=<token> CLOUDFLARE_ACCOUNT_ID=<account id> \
   npx wrangler d1 execute iris-i-tallo-db --remote --file=migration-3-akun-admin.sql
+#    Login admin pakai email sendiri (opsional; email tidak ditulis di repo):
+CLOUDFLARE_API_TOKEN=<token> CLOUDFLARE_ACCOUNT_ID=<account id>   npx wrangler d1 execute iris-i-tallo-db --remote   --command "UPDATE warga_auth SET username = '<email-admin>' WHERE id = 'adm-01'"
 # 2. Worker:
 CLOUDFLARE_API_TOKEN=<token> CLOUDFLARE_ACCOUNT_ID=<account id> npx wrangler deploy
 # 3. Frontend (dari root proyek):
