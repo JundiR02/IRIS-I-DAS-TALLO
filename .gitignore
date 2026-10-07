@@ -16,3 +16,4 @@ npm-debug.log*
 worker-upload/node_modules
 worker-upload/.wrangler
 worker-upload/.dev.vars
+worker-upload/backup
