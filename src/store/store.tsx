@@ -19,6 +19,7 @@ import {
   buatLaporan,
   ambilDirektori,
   ambilSaya,
+  daftar as apiDaftar,
   gantiRahasia as apiGantiRahasia,
   loginDenganUsername,
   loginMasyarakat,
@@ -26,6 +27,7 @@ import {
   type KomentarApi,
   type LaporanApi,
   type ProfilApi,
+  type DraftDaftar,
   type SesiWarga as SesiApi,
 } from '../lib/api'
 
@@ -41,7 +43,8 @@ const STORAGE_KEY = 'iris-i-tallo.v1'
 export interface SesiWarga {
   id: string
   noUrut: number
-  peran: 'warga' | 'peneliti'
+  /** 'pendaftar' = daftar sendiri, belum disetujui admin */
+  peran: 'warga' | 'peneliti' | 'pendaftar'
   nama?: string
   token: string
 }
@@ -194,7 +197,7 @@ function wargaDariSesi(sesi: Pick<SesiWarga, 'id' | 'noUrut' | 'peran' | 'nama'>
     hariMelapor: 0,
     poin: 0,
     badge: [],
-    peran: sesi.peran,
+    peran: sesi.peran === 'peneliti' ? 'peneliti' : 'warga',
   }
 }
 
@@ -294,12 +297,16 @@ function gabungkanData(state: State): State {
 }
 
 function keSesi(api: SesiApi): SesiWarga {
+  return profilKeSesi(api.warga, api.token)
+}
+
+function profilKeSesi(p: ProfilApi, token: string): SesiWarga {
   return {
-    id: api.warga.id,
-    noUrut: api.warga.noUrut,
-    peran: api.warga.peran === 'peneliti' ? 'peneliti' : 'warga',
-    nama: api.warga.nama,
-    token: api.token,
+    id: p.id,
+    noUrut: p.noUrut,
+    peran: p.peran === 'peneliti' || p.peran === 'pendaftar' ? p.peran : 'warga',
+    nama: p.nama,
+    token,
   }
 }
 
@@ -322,6 +329,7 @@ export interface DraftLaporan {
 type Action =
   | { type: 'LOGIN_BERHASIL'; sesi: SesiWarga }
   | { type: 'LOGOUT' }
+  | { type: 'SET_DIREKTORI'; direktori: Warga[] }
   | { type: 'MULAI_MUAT_DATA' }
   | { type: 'DATA_SERVER_DIMUAT'; laporan: Laporan[]; komentar: Komentar[]; direktori?: Warga[] }
   | { type: 'TAMBAH_LAPORAN_LOKAL'; draft: DraftLaporan }
@@ -380,6 +388,8 @@ function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'LOGIN_BERHASIL':
       return { ...state, auth: action.sesi }
+    case 'SET_DIREKTORI':
+      return { ...state, direktori: action.direktori }
     case 'LOGOUT':
       return {
         ...state,
@@ -550,7 +560,12 @@ interface StoreValue {
   sukaKomentar: (id: string) => boolean
   actions: {
     /** Masyarakat (warga responden): nomor urut + PIN. */
-    loginMasyarakat: (noUrut: number, pin: string) => Promise<void>
+    /** identitas = nomor urut, atau email/no. HP untuk akun daftar sendiri */
+    loginMasyarakat: (identitas: string, rahasia: string) => Promise<void>
+    /** Daftar sendiri → langsung masuk dengan status menunggu persetujuan. */
+    daftar: (draft: DraftDaftar) => Promise<void>
+    /** Cek ulang ke server apakah admin sudah menyetujui. true = sudah. */
+    cekPersetujuan: () => Promise<boolean>
     /** Peneliti: username + kata sandi. */
     loginPeneliti: (username: string, password: string) => Promise<void>
     /** Ganti PIN (warga) / kata sandi (peneliti) sendiri; sesi di perangkat lain keluar. */
@@ -626,7 +641,15 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
     // Sesi dicek terpisah: token yang dicabut admin (PIN direset / akun
     // dinonaktifkan) langsung mengeluarkan pengguna. Gagal jaringan = abaikan,
     // supaya mode offline tetap jalan.
-    ambilSaya(tokenUntukMuat).catch((e) => {
+    ambilSaya(tokenUntukMuat)
+      .then((p) => {
+        if (batal || !state.auth) return
+        const baru = profilKeSesi(p, tokenUntukMuat)
+        if (baru.peran !== state.auth.peran || baru.noUrut !== state.auth.noUrut || baru.nama !== state.auth.nama) {
+          dispatch({ type: 'LOGIN_BERHASIL', sesi: baru })
+        }
+      })
+      .catch((e) => {
       if (batal || !(e instanceof ApiError) || (e.status !== 401 && e.status !== 403)) return
       dispatch({ type: 'LOGOUT' })
       dispatch({ type: 'TOAST', teks: 'Sesi Anda berakhir. Silakan masuk lagi.', ikon: '🔒' })
@@ -734,8 +757,22 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       sukaLaporan: (id) => state.sukaLaporan.includes(id),
       sukaKomentar: (id) => state.sukaKomentar.includes(id),
       actions: {
-        loginMasyarakat: async (noUrut, pin) => {
-          dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await loginMasyarakat(noUrut, pin)) })
+        loginMasyarakat: async (identitas, rahasia) => {
+          dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await loginMasyarakat(identitas, rahasia)) })
+        },
+        daftar: async (draft) => {
+          dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await apiDaftar(draft)) })
+        },
+        cekPersetujuan: async () => {
+          const auth = state.auth
+          if (!auth) return false
+          const p = await ambilSaya(auth.token)
+          if (p.peran === 'pendaftar') return false
+          // Disetujui: muat direktori dulu supaya titik pantau & nama sudah benar.
+          const dir = await ambilDirektori().catch(() => null)
+          if (dir) dispatch({ type: 'SET_DIREKTORI', direktori: gabungDirektori(dir) })
+          dispatch({ type: 'LOGIN_BERHASIL', sesi: profilKeSesi(p, auth.token) })
+          return true
         },
         loginPeneliti: async (username, password) => {
           dispatch({ type: 'LOGIN_BERHASIL', sesi: keSesi(await loginDenganUsername('peneliti', username, password)) })

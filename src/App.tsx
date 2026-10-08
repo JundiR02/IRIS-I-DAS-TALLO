@@ -8,6 +8,7 @@ import Toast from './components/Toast'
 import Logo from './components/Logo'
 import Onboarding from './screens/Onboarding'
 import Login from './screens/Login'
+import MenungguPersetujuan from './screens/MenungguPersetujuan'
 import Beranda from './screens/Beranda'
 import Lapor from './screens/Lapor'
 import Rekomendasi from './screens/Rekomendasi'
@@ -62,7 +63,13 @@ export default function App() {
   // Belum login (dan bukan sedang di layar onboarding) — tampilkan gerbang
   // login PIN. Identitas warga (titik, rotasi, profil) baru valid sesudah ini.
   const konten =
-    !masuk && location.pathname !== '/onboarding' ? <Login /> : <AppScreens location={location} />
+    !masuk && location.pathname !== '/onboarding' ? (
+      <Login />
+    ) : state.auth?.peran === 'pendaftar' ? (
+      <MenungguPersetujuan />
+    ) : (
+      <AppScreens location={location} />
+    )
 
   // HP sungguhan: penuh layar, tanpa bingkai/status-bar palsu — HP-nya sendiri
   // sudah punya itu. Ini yang dipakai warga sehari-hari.

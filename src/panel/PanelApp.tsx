@@ -73,6 +73,9 @@ function KerangkaPanel() {
               {to === '/panel/laporan' && !!ringkasan?.laporanMenunggu && (
                 <span className="ml-auto rounded-pill bg-waspada px-1.5 text-[11px] text-white">{ringkasan.laporanMenunggu}</span>
               )}
+              {to === '/panel/pengguna' && !!ringkasan?.pendaftarMenunggu && (
+                <span className="ml-auto rounded-pill bg-waspada px-1.5 text-[11px] text-white">{ringkasan.pendaftarMenunggu}</span>
+              )}
             </NavLink>
           ))}
         </nav>

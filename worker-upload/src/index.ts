@@ -129,7 +129,8 @@ function acak(alfabet: string, panjang: number): string {
 const buatPin = () => acak('0123456789', 6)
 const buatKataSandi = () => acak('abcdefghjkmnpqrstuvwxyz23456789', 10)
 
-type Peran = 'warga' | 'peneliti' | 'admin'
+/** 'pendaftar' = daftar sendiri, belum disetujui admin (belum bisa menulis data). */
+type Peran = 'warga' | 'peneliti' | 'admin' | 'pendaftar'
 
 interface TokenPayload {
   id: string
@@ -248,6 +249,8 @@ interface BarisAkun {
   dibuat: string | null
   login_terakhir: string | null
   foto_url: string | null
+  /** peran yang dipilih saat daftar sendiri (keputusan akhir tetap di admin) */
+  peran_diminta: string | null
 }
 
 /** Profil publik — dipakai aplikasi untuk menampilkan nama/avatar di feed. Tanpa kredensial. */
@@ -268,7 +271,13 @@ function profilKeJson(r: BarisAkun) {
 
 /** Versi lengkap untuk admin: + username & jejak aktivitas. */
 function akunKeJson(r: BarisAkun) {
-  return { ...profilKeJson(r), username: r.username ?? undefined, dibuat: r.dibuat ?? undefined, loginTerakhir: r.login_terakhir ?? undefined }
+  return {
+    ...profilKeJson(r),
+    username: r.username ?? undefined,
+    dibuat: r.dibuat ?? undefined,
+    loginTerakhir: r.login_terakhir ?? undefined,
+    peranDiminta: r.peran_diminta ?? undefined,
+  }
 }
 
 /**
@@ -352,12 +361,26 @@ function cekKataSandiBaru(sandi: string, username: string | null): string | null
 const USERNAME_VALID = /^[a-z0-9._+@-]{3,64}$/
 const PESAN_USERNAME = 'Username/email 3–64 karakter: huruf kecil, angka, titik, strip, @.'
 
-/** Peneliti/admin tidak ikut rotasi; nomor urut cuma pengisi unik (9001+ / 1+). */
+/** Peneliti/admin/pendaftar tidak ikut rotasi; nomor urut cuma pengisi unik (9001+ / 1+ / 100001+). */
 async function noUrutBerikutnya(env: Env, peran: Peran): Promise<number> {
   const maks = await env.DB.prepare('SELECT MAX(no_urut) AS m FROM warga_auth WHERE peran = ?')
     .bind(peran)
     .first<{ m: number | null }>()
-  return Math.max(maks?.m ?? 0, peran === 'peneliti' ? 9000 : 0) + 1
+  const dasar = peran === 'peneliti' ? 9000 : peran === 'pendaftar' ? 100_000 : 0
+  return Math.max(maks?.m ?? 0, dasar) + 1
+}
+
+const MAKS_DAFTAR_PER_JAM = 5
+const MENUNGGU_PERSETUJUAN = 'Akun Anda masih menunggu persetujuan admin.'
+
+/** Email (huruf kecil) atau no. HP Indonesia (+62/62 → 0). Kosong kalau tidak valid. */
+function normalKontak(mentah: string): string {
+  const s = mentah.trim().toLowerCase()
+  if (s.includes('@')) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && USERNAME_VALID.test(s) ? s : ''
+  let hp = s.replace(/[\s().-]/g, '')
+  if (hp.startsWith('+62')) hp = '0' + hp.slice(3)
+  else if (hp.startsWith('62')) hp = '0' + hp.slice(2)
+  return /^0\d{8,13}$/.test(hp) ? hp : ''
 }
 
 const WARNA_AVATAR = ['#2F5D3A', '#B0623B', '#2C5F91', '#6C4A70', '#B98A2E', '#2E7D74', '#A8455B', '#4A5560']
@@ -374,10 +397,27 @@ export default {
 
     // === AUTH ================================================================
 
-    // Masyarakat: nomor urut responden + PIN. /auth/login dipertahankan sebagai
-    // alias supaya versi aplikasi lama yang sudah terpasang di HP tetap bisa masuk.
+    // Masyarakat: nomor urut responden + PIN, ATAU email/no. HP + sandi (akun
+    // yang mendaftar sendiri — termasuk yang masih menunggu persetujuan admin).
+    // /auth/login dipertahankan sebagai alias untuk versi aplikasi lama.
     if (request.method === 'POST' && (url.pathname === '/auth/masyarakat' || url.pathname === '/auth/login')) {
-      const body = (await request.json().catch(() => null)) as { noUrut?: number; pin?: string } | null
+      const body = (await request.json().catch(() => null)) as
+        | { noUrut?: number; pin?: string; username?: string; password?: string }
+        | null
+      if (typeof body?.username === 'string' && body.username.trim()) {
+        const username = body.username.trim().toLowerCase()
+        const password = body.password ?? ''
+        if (!password) return err(cors, 400, 'Kata sandi wajib diisi.')
+        const row = await env.DB.prepare('SELECT * FROM warga_auth WHERE username = ?').bind(username).first<BarisAkun>()
+        if (row && (row.peran === 'peneliti' || row.peran === 'admin')) {
+          const cocok = await cocokkanRahasia(row.id, password, row.pin_hash)
+          if (cocok) {
+            return err(cors, 403, row.peran === 'peneliti' ? 'Akun ini akun peneliti — pilih tab "Peneliti".' : 'Akun admin masuk lewat Panel.')
+          }
+        }
+        const boleh = row && (row.peran === 'warga' || row.peran === 'pendaftar') ? row : null
+        return prosesLogin(env, cors, `u:${username}`, -1, boleh, password, 'Email/no. HP atau kata sandi salah.')
+      }
       const noUrut = body?.noUrut
       const pin = body?.pin
       if (typeof noUrut !== 'number' || typeof pin !== 'string' || pin.length === 0) {
@@ -387,6 +427,55 @@ export default {
         .bind(noUrut)
         .first<BarisAkun>()
       return prosesLogin(env, cors, `no:${noUrut}`, noUrut, row, pin, 'Nomor urut atau PIN salah.')
+    }
+
+    // Daftar sendiri. Akun berstatus 'pendaftar' (bisa masuk, belum bisa
+    // melapor/berkomentar) sampai admin menyetujui & menetapkan perannya.
+    if (request.method === 'POST' && url.pathname === '/auth/daftar') {
+      const ip = request.headers.get('CF-Connecting-IP') ?? 'tanpa-ip'
+      const kunci = `daftar:${ip}`
+      const sejamLalu = new Date(Date.now() - 3_600_000).toISOString()
+      const jumlah = await env.DB.prepare('SELECT COUNT(*) as n FROM login_attempts WHERE kunci = ? AND waktu > ?')
+        .bind(kunci, sejamLalu)
+        .first<{ n: number }>()
+      if ((jumlah?.n ?? 0) >= MAKS_DAFTAR_PER_JAM) return err(cors, 429, 'Terlalu banyak pendaftaran dari jaringan ini. Coba lagi nanti.')
+
+      const b = (await request.json().catch(() => null)) as Record<string, unknown> | null
+      const nama = typeof b?.nama === 'string' ? b.nama.trim().replace(/\s+/g, ' ') : ''
+      const kontak = normalKontak(typeof b?.kontak === 'string' ? b.kontak : '')
+      const sandi = typeof b?.sandi === 'string' ? b.sandi : ''
+      const diminta = b?.peranDiminta === 'peneliti' ? 'peneliti' : 'warga'
+      if (nama.length < 2 || nama.length > 60) return err(cors, 400, 'Nama 2–60 karakter.')
+      if (!kontak) return err(cors, 400, 'Isi email atau nomor HP yang valid.')
+      const masalah = cekKataSandiBaru(sandi, kontak)
+      if (masalah) return err(cors, 400, masalah)
+
+      const id = `u-${crypto.randomUUID().slice(0, 8)}`
+      const sekarang = new Date().toISOString()
+      try {
+        await env.DB.prepare(
+          `INSERT INTO warga_auth (id, no_urut, peran, pin_hash, nama, username, inisial, warna, kelurahan, titik_id,
+             aktif, token_versi, dibuat, peran_diminta)
+           VALUES (?, ?, 'pendaftar', ?, ?, ?, ?, ?, ?, NULL, 1, 0, ?, ?)`,
+        ).bind(
+          id,
+          await noUrutBerikutnya(env, 'pendaftar'),
+          await hashRahasia(sandi),
+          nama,
+          kontak,
+          inisialDari(nama),
+          WARNA_AVATAR[Math.floor(Math.random() * WARNA_AVATAR.length)],
+          typeof b?.kelurahan === 'string' && b.kelurahan.trim() ? b.kelurahan.trim().slice(0, 60) : '-',
+          sekarang,
+          diminta,
+        ).run()
+      } catch {
+        return err(cors, 409, 'Email/no. HP ini sudah terdaftar. Silakan masuk.')
+      }
+      await env.DB.prepare('INSERT INTO login_attempts (no_urut, kunci, waktu) VALUES (-1, ?, ?)').bind(kunci, sekarang).run()
+
+      const row = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(id).first<BarisAkun>()
+      return prosesLogin(env, cors, `u:${kontak}`, -1, row, sandi, 'Gagal masuk setelah mendaftar.')
     }
 
     // Peneliti & admin: username + kata sandi, masing-masing lewat pintunya
@@ -499,7 +588,7 @@ export default {
     // sebelumnya cuma ditulis tetap di src/data/seed.ts. Akun admin tidak ikut.
     if (request.method === 'GET' && url.pathname === '/warga') {
       const { results } = await env.DB.prepare(
-        "SELECT * FROM warga_auth WHERE peran != 'admin' ORDER BY peran DESC, no_urut ASC",
+        "SELECT * FROM warga_auth WHERE peran IN ('warga', 'peneliti') ORDER BY peran DESC, no_urut ASC",
       ).all<BarisAkun>()
       return json(cors, 200, (results ?? []).map(profilKeJson))
     }
@@ -509,6 +598,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/upload') {
       const warga = await wargaDariRequest(request, env)
       if (!warga) return err(cors, 401, 'Sesi login tidak valid atau sudah habis. Masuk ulang.')
+      if (warga.peran === 'pendaftar') return err(cors, 403, MENUNGGU_PERSETUJUAN)
 
       const contentType = request.headers.get('Content-Type') ?? ''
       if (!contentType.startsWith('image/')) {
@@ -551,6 +641,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/laporan') {
       const warga = await wargaDariRequest(request, env)
       if (!warga) return err(cors, 401, 'Sesi login tidak valid atau sudah habis. Masuk ulang.')
+      if (warga.peran === 'pendaftar') return err(cors, 403, MENUNGGU_PERSETUJUAN)
 
       const b = await request.json().catch(() => null) as Record<string, unknown> | null
       if (!b || typeof b.titikId !== 'string' || typeof b.statusPelapor !== 'string') {
@@ -588,6 +679,7 @@ export default {
     if (request.method === 'POST' && sukaMatch) {
       const warga = await wargaDariRequest(request, env)
       if (!warga) return err(cors, 401, 'Sesi login tidak valid atau sudah habis. Masuk ulang.')
+      if (warga.peran === 'pendaftar') return err(cors, 403, MENUNGGU_PERSETUJUAN)
       const laporanId = sukaMatch[1]
 
       const sudah = await env.DB.prepare(
@@ -626,6 +718,7 @@ export default {
     if (request.method === 'POST' && url.pathname === '/komentar') {
       const warga = await wargaDariRequest(request, env)
       if (!warga) return err(cors, 401, 'Sesi login tidak valid atau sudah habis. Masuk ulang.')
+      if (warga.peran === 'pendaftar') return err(cors, 403, MENUNGGU_PERSETUJUAN)
 
       const b = await request.json().catch(() => null) as Record<string, unknown> | null
       if (!b || typeof b.laporanId !== 'string' || typeof b.teks !== 'string' || !b.teks.trim()) {
@@ -662,7 +755,7 @@ export default {
         ).bind(sehariLalu),
         env.DB.prepare(
           `SELECT SUM(peran = 'warga' AND aktif = 1) AS warga, SUM(peran = 'peneliti' AND aktif = 1) AS peneliti,
-                  SUM(aktif = 0) AS nonaktif FROM warga_auth`,
+                  SUM(aktif = 0) AS nonaktif, SUM(peran = 'pendaftar' AND aktif = 1) AS pendaftar FROM warga_auth`,
         ),
         env.DB.prepare('SELECT COUNT(*) AS total FROM komentar'),
       ])
@@ -670,6 +763,7 @@ export default {
       const a = (akun.results?.[0] ?? {}) as Record<string, number | null>
       const k = (kom.results?.[0] ?? {}) as Record<string, number | null>
       return json(cors, 200, {
+        pendaftarMenunggu: a.pendaftar ?? 0,
         laporanTotal: l.total ?? 0,
         laporanMenunggu: l.menunggu ?? 0,
         laporan24Jam: l.sehari ?? 0,
@@ -828,12 +922,16 @@ export default {
           if (!b) return err(cors, 400, 'Data tidak valid.')
           if (id === admin!.id && b.aktif === false) return err(cors, 400, 'Tidak bisa menonaktifkan akun Anda sendiri.')
 
-          // Ganti peran (mis. masyarakat → peneliti). Cara masuknya ikut berubah
-          // (nomor urut + PIN ↔ username + kata sandi), jadi kredensial baru
-          // dibuat dan semua sesi lama dicabut.
+          // Ganti peran (mis. masyarakat → peneliti), termasuk MENYETUJUI pendaftar.
+          // Akun yang sudah punya username/email tetap memakai sandinya sendiri;
+          // hanya akun lama tanpa username (masuk via nomor urut + PIN dari admin)
+          // yang dibuatkan kata sandi baru saat naik jadi peneliti/admin.
           const peranBaru = (b.peran ?? row.peran) as Peran
-          if (!['warga', 'peneliti', 'admin'].includes(peranBaru)) return err(cors, 400, 'Peran tidak valid.')
+          if (!['warga', 'peneliti', 'admin'].includes(peranBaru) && peranBaru !== row.peran) {
+            return err(cors, 400, 'Peran tidak valid.')
+          }
           const gantiPeran = peranBaru !== row.peran
+          const disetujui = gantiPeran && row.peran === 'pendaftar'
           if (gantiPeran && id === admin!.id) return err(cors, 400, 'Tidak bisa mengubah peran akun Anda sendiri.')
 
           const nama = typeof b.nama === 'string' && b.nama.trim() ? b.nama.trim() : row.nama
@@ -846,14 +944,12 @@ export default {
               if (!Number.isInteger(noUrut) || noUrut < 1 || noUrut > 40) return err(cors, 400, 'Nomor urut harus 1–40.')
             }
             if (gantiPeran && !titikId) return err(cors, 400, 'Titik pantau wajib dipilih untuk akun masyarakat.')
-            // Masyarakat masuk pakai nomor urut; username/email lamanya dilepas.
-            if (gantiPeran) username = null
-          } else {
+          } else if (peranBaru !== 'pendaftar') {
             if (typeof b.username === 'string' && b.username.trim()) username = b.username.trim().toLowerCase()
             if (!username || !USERNAME_VALID.test(username)) return err(cors, 400, PESAN_USERNAME)
             if (gantiPeran) noUrut = await noUrutBerikutnya(env, peranBaru)
           }
-          const rahasia = gantiPeran ? (peranBaru === 'warga' ? buatPin() : buatKataSandi()) : null
+          const rahasia = gantiPeran && !row.username && peranBaru !== 'warga' ? buatKataSandi() : null
           const aktif = typeof b.aktif === 'boolean' ? (b.aktif ? 1 : 0) : row.aktif
           try {
             await env.DB.prepare(
@@ -870,7 +966,8 @@ export default {
               aktif,
               rahasia ? await hashRahasia(rahasia) : null,
               // Menonaktifkan / ganti peran = cabut semua sesi yang sedang berjalan.
-              (row.aktif && !aktif) || gantiPeran ? 1 : 0,
+              // Pendaftar yang disetujui tidak dikeluarkan — aplikasinya langsung terbuka.
+              (row.aktif && !aktif) || (gantiPeran && !disetujui) ? 1 : 0,
               id,
             ).run()
           } catch {
@@ -882,6 +979,13 @@ export default {
           }
           const baru = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(id).first<BarisAkun>()
           return json(cors, 200, { ...akunKeJson(baru!), ...(rahasia ? { rahasiaBaru: rahasia } : {}) })
+        }
+
+        // Tolak pendaftar = hapus akunnya (belum punya data apa pun).
+        if (request.method === 'DELETE' && !akunMatch[2]) {
+          if (row.peran !== 'pendaftar') return err(cors, 400, 'Hanya pendaftar yang bisa dihapus. Akun lain: nonaktifkan.')
+          await env.DB.prepare('DELETE FROM warga_auth WHERE id = ?').bind(id).run()
+          return json(cors, 200, { ok: true })
         }
       }
 

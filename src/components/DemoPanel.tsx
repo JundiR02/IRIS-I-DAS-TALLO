@@ -43,7 +43,7 @@ export default function DemoPanel() {
   const loginCepat = async (akun: (typeof AKUN_DEMO)[number]) => {
     setMasukMemuat(akun.id)
     try {
-      await actions.loginMasyarakat(akun.noUrut, akun.rahasia)
+      await actions.loginMasyarakat(String(akun.noUrut), akun.rahasia)
     } catch {
       actions.toast('Gagal masuk — periksa apakah kredensial demo masih sesuai di database.', '⚠️')
     } finally {

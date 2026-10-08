@@ -69,6 +69,15 @@ export default function TabRingkasan() {
         <KartuAngka label="Peneliti aktif" nilai={r?.penelitiAktif ?? '–'} />
         {isAdmin && (
           <KartuAngka
+            label="Pendaftar baru"
+            nilai={r?.pendaftarMenunggu ?? '–'}
+            nada={r?.pendaftarMenunggu ? 'waspada' : 'netral'}
+            catatan="Menunggu persetujuan Anda"
+            onClick={() => navigate('/panel/pengguna')}
+          />
+        )}
+        {isAdmin && (
+          <KartuAngka
             label="Akun nonaktif"
             nilai={r?.akunNonaktif ?? '–'}
             onClick={() => navigate('/panel/pengguna')}

@@ -32,7 +32,8 @@ function withAuth(token: string): HeadersInit {
 // Tiga pintu masuk terpisah: masyarakat (nomor urut + PIN), peneliti dan
 // admin (username + kata sandi). Lihat worker-upload/src/index.ts.
 
-export type Peran = 'warga' | 'peneliti' | 'admin'
+/** 'pendaftar' = daftar sendiri, menunggu admin menetapkan peran. */
+export type Peran = 'warga' | 'peneliti' | 'admin' | 'pendaftar'
 
 /** Profil publik satu akun, sumbernya tabel warga_auth di D1. */
 export interface ProfilApi {
@@ -54,11 +55,25 @@ export interface SesiWarga {
   warga: ProfilApi
 }
 
-export function loginMasyarakat(noUrut: number, pin: string): Promise<SesiWarga> {
-  return permintaan<SesiWarga>('/auth/masyarakat', {
-    method: 'POST',
-    body: JSON.stringify({ noUrut, pin }),
-  })
+/** `identitas` = nomor urut responden (1–3 angka) atau email / no. HP akun daftar sendiri. */
+export function loginMasyarakat(identitas: string, rahasia: string): Promise<SesiWarga> {
+  const id = identitas.trim()
+  const body = /^\d{1,3}$/.test(id) ? { noUrut: Number(id), pin: rahasia } : { username: id, password: rahasia }
+  return permintaan<SesiWarga>('/auth/masyarakat', { method: 'POST', body: JSON.stringify(body) })
+}
+
+export interface DraftDaftar {
+  nama: string
+  /** email atau no. HP — dipakai untuk masuk */
+  kontak: string
+  sandi: string
+  peranDiminta: 'warga' | 'peneliti'
+  kelurahan?: string
+}
+
+/** Daftar sendiri → langsung masuk sebagai 'pendaftar' (menunggu persetujuan admin). */
+export function daftar(draft: DraftDaftar): Promise<SesiWarga> {
+  return permintaan<SesiWarga>('/auth/daftar', { method: 'POST', body: JSON.stringify(draft) })
 }
 
 export function loginDenganUsername(
@@ -188,6 +203,7 @@ export function buatKomentar(
 // --- Panel: peneliti + admin ----------------------------------------------
 
 export interface RingkasanPanel {
+  pendaftarMenunggu: number
   laporanTotal: number
   laporanMenunggu: number
   laporan24Jam: number
@@ -232,6 +248,8 @@ export interface AkunAdminApi extends ProfilApi {
   username?: string
   dibuat?: string
   loginTerakhir?: string
+  /** pilihan pendaftar saat daftar sendiri */
+  peranDiminta?: 'warga' | 'peneliti'
 }
 
 export interface DraftAkunApi {
@@ -272,6 +290,11 @@ export function resetRahasiaAkun(token: string, id: string): Promise<{ rahasia: 
 
 export function hapusLaporan(token: string, id: string): Promise<{ ok: true }> {
   return permintaan(`/admin/laporan/${encodeURIComponent(id)}`, { method: 'DELETE', headers: withAuth(token) })
+}
+
+/** Tolak pendaftar (hanya akun berstatus pendaftar yang bisa dihapus). */
+export function tolakPendaftar(token: string, id: string): Promise<{ ok: true }> {
+  return permintaan(`/admin/akun/${encodeURIComponent(id)}`, { method: 'DELETE', headers: withAuth(token) })
 }
 
 export function hapusKomentar(token: string, id: string): Promise<{ ok: true }> {

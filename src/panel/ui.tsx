@@ -92,6 +92,7 @@ const PERAN_LABEL: Record<Peran, { teks: string; kelas: string }> = {
   warga: { teks: 'Masyarakat', kelas: 'bg-river-mist text-river-deep' },
   peneliti: { teks: 'Peneliti', kelas: 'bg-forest/10 text-forest' },
   admin: { teks: 'Admin', kelas: 'bg-lime/25 text-lime-deep' },
+  pendaftar: { teks: 'Menunggu persetujuan', kelas: 'bg-waspada-wash text-waspada-ink' },
 }
 
 export function BadgePeran({ peran }: { peran: Peran }) {

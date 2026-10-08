@@ -238,7 +238,15 @@ cd .. && npm run build && firebase deploy --only hosting
 ```
 
 Database baru dari nol: `schema.sql` → `migration-2-login-attempts.sql` →
-`migration-3-akun-admin.sql` → `migration-4-foto-profil.sql`.
+`migration-3-akun-admin.sql` → `migration-4-foto-profil.sql` → `migration-5-pendaftaran.sql`.
+
+**Daftar sendiri** (`POST /auth/daftar`): siapa pun bisa mendaftar dari layar login
+dengan nama, email/no. HP, dan kata sandi buatan sendiri. Akun berperan `pendaftar`
+— bisa masuk tapi hanya melihat layar "Menunggu persetujuan" (server menolak
+laporan/komentar/unggah). Admin menyetujui di Panel → Pengguna → tab *Pendaftar*
+dengan menetapkan peran (masyarakat + nomor urut & titik pantau, atau peneliti), atau
+menolak (akun dihapus). Sandi pendaftar tidak pernah diubah admin. Batas 5
+pendaftaran per jam per alamat IP.
 
 **Profil sendiri** (`POST /auth/profil`): setiap akun bisa mengubah nama tampilan &
 foto profil (dipotong persegi 320px, disimpan di R2 `profil/`). Di Panel: klik
