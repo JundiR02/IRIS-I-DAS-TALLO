@@ -8,15 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import type { Komentar, Laporan, Lang, Notif, Rekomendasi, Status, StatusVerifikasi, Warga } from '../lib/types'
-import {
-  CURRENT_USER_ID,
-  KOMENTAR,
-  LAPORAN,
-  NOTIF,
-  REKOMENDASI,
-  TITIK,
-  WARGA,
-} from '../data/seed'
+import { TITIK } from '../data/seed'
 import { noUrutHariIni } from '../lib/rotasi'
 import { unggahFotoKeServer } from '../lib/uploadFoto'
 import {
@@ -88,7 +80,7 @@ interface State extends Persisted {
 
 const DEFAULT_PERSISTED: Persisted = {
   auth: null,
-  direktori: WARGA,
+  direktori: [],
   laporanBaru: [],
   komentarBaru: [],
   lang: 'id',
@@ -166,33 +158,31 @@ function enrichKomentar(api: KomentarApi, direktori: Warga[]): Komentar {
   }
 }
 
-/** Profil dari server menimpa data lokal; statistik poin/lencana (belum ada
-    di server) tetap diambil dari seed kalau ada. Entri seed yang tidak dikenal
-    server tetap disimpan supaya data contoh lama masih punya nama. */
+/** Direktori nama/avatar — sepenuhnya dari server (GET /warga). Poin &
+    lencana belum dihitung server, jadi mulai dari 0. */
 function gabungDirektori(profil: ProfilApi[]): Warga[] {
-  const dariServer: Warga[] = profil
+  return profil
     .filter((p) => p.peran !== 'admin')
     .map((p) => {
-      const lokal = WARGA.find((w) => w.id === p.id)
       return {
         id: p.id,
         nama: p.nama,
         inisial: p.inisial,
         warna: p.warna,
         kelurahan: p.kelurahan,
-        titikId: TITIK.some((t) => t.id === p.titikId) ? p.titikId! : (lokal?.titikId ?? TITIK[0].id),
+        titikId: TITIK.some((t) => t.id === p.titikId) ? p.titikId! : TITIK[0].id,
         noUrut: p.noUrut,
-        hariMelapor: lokal?.hariMelapor ?? 0,
-        poin: lokal?.poin ?? 0,
-        badge: lokal?.badge ?? [],
+        hariMelapor: 0,
+        poin: 0,
+        badge: [],
         peran: p.peran === 'peneliti' ? 'peneliti' : 'warga',
+        fotoUrl: p.fotoUrl,
       }
     })
-  return [...dariServer, ...WARGA.filter((w) => !dariServer.some((s) => s.id === w.id))]
 }
 
 /** Profil pengganti kalau akun yang login belum ada di direktori lokal (mis. akun baru, data belum termuat). */
-function wargaDariSesi(sesi: SesiWarga): Warga {
+function wargaDariSesi(sesi: Pick<SesiWarga, 'id' | 'noUrut' | 'peran' | 'nama'>): Warga {
   return {
     id: sesi.id,
     nama: sesi.nama ?? 'Warga',
@@ -209,29 +199,97 @@ function wargaDariSesi(sesi: SesiWarga): Warga {
 }
 
 function cariMe(state: Pick<State, 'auth' | 'direktori'>): Warga {
-  if (!state.auth) return state.direktori.find((w) => w.id === CURRENT_USER_ID) ?? WARGA[0]
+  // Belum masuk: profil kosong (layar login yang tampil, bukan layar ini).
+  if (!state.auth) return wargaDariSesi({ id: '-', noUrut: 0, peran: 'warga', nama: 'Warga' })
   return state.direktori.find((w) => w.id === state.auth!.id) ?? wargaDariSesi(state.auth)
+}
+
+const JUDUL_REKOMENDASI: Record<Status, string> = {
+  aman: 'Kondisi aman',
+  waspada: 'Waspada — siapkan diri',
+  bahaya: 'Bahaya — segera bertindak',
+}
+
+/** Rekomendasi = laporan yang sudah diverifikasi peneliti dan diberi teks arahan. */
+function rekomendasiDariLaporan(laporan: Laporan[]): Rekomendasi[] {
+  return laporan
+    .filter((l) => l.rekomendasiTeks && l.waktuReview)
+    .map((l) => {
+      const level = l.statusTerverifikasi ?? l.statusPelapor
+      return {
+        id: `rk-${l.id}`,
+        laporanId: l.id,
+        titikId: l.titikId,
+        level,
+        judul: JUDUL_REKOMENDASI[level],
+        teks: l.rekomendasiTeks!,
+        reviewerNama: l.reviewerNama ?? 'Tim IRIS',
+        waktu: l.waktuReview!,
+        dibaca: false,
+      }
+    })
+}
+
+/** Notifikasi diturunkan dari kejadian nyata pada laporan milik pengguna:
+    laporannya dicek peneliti, atau dikomentari orang lain. */
+function notifDariData(laporan: Laporan[], komentar: Komentar[], saya?: string): Notif[] {
+  if (!saya) return []
+  const milikSaya = new Map(laporan.filter((l) => l.wargaId === saya && !l.offline).map((l) => [l.id, l]))
+  const hasil: Notif[] = []
+  for (const l of milikSaya.values()) {
+    if (l.statusVerifikasi === 'menunggu' || !l.waktuReview) continue
+    const status = l.statusTerverifikasi ?? l.statusPelapor
+    hasil.push({
+      id: `nt-v-${l.id}`,
+      jenis: status === 'bahaya' ? 'peringatan' : 'terverifikasi',
+      teks: `Laporan Anda sudah dicek ${l.reviewerNama ?? 'peneliti'} — status ${status.toUpperCase()}${
+        l.statusVerifikasi === 'dikoreksi' ? ' (dikoreksi)' : ''
+      }. Lihat arahannya.`,
+      waktu: l.waktuReview,
+      dibaca: false,
+      laporanId: l.id,
+    })
+  }
+  for (const k of komentar) {
+    if (k.wargaId === saya || !milikSaya.has(k.laporanId)) continue
+    const potong = k.teks.length > 70 ? `${k.teks.slice(0, 70)}…` : k.teks
+    hasil.push({
+      id: `nt-k-${k.id}`,
+      jenis: 'komentar',
+      teks: `${k.nama} mengomentari laporan Anda: "${potong}"`,
+      waktu: k.waktu,
+      dibaca: false,
+      laporanId: k.laporanId,
+    })
+  }
+  return hasil
 }
 
 function buildState(p: Persisted): State {
   return {
     ...p,
-    laporanServer: LAPORAN,
-    komentarServer: KOMENTAR,
-    laporan: [...p.laporanBaru, ...LAPORAN],
-    komentar: [...KOMENTAR, ...p.komentarBaru],
-    rekomendasi: REKOMENDASI,
-    notif: NOTIF,
+    // Kosong sampai data server termuat — tidak ada lagi data contoh.
+    laporanServer: [],
+    komentarServer: [],
+    laporan: [...p.laporanBaru],
+    komentar: [...p.komentarBaru],
+    rekomendasi: [],
+    // Belum ada sistem notifikasi di server.
+    notif: [],
     memuatData: false,
     toast: null,
   }
 }
 
 function gabungkanData(state: State): State {
+  const laporan = [...state.laporanBaru, ...state.laporanServer]
+  const komentar = [...state.komentarServer, ...state.komentarBaru]
   return {
     ...state,
-    laporan: [...state.laporanBaru, ...state.laporanServer],
-    komentar: [...state.komentarServer, ...state.komentarBaru],
+    laporan,
+    komentar,
+    rekomendasi: rekomendasiDariLaporan(laporan),
+    notif: notifDariData(laporan, komentar, state.auth?.id),
   }
 }
 
@@ -332,6 +390,7 @@ function reducer(state: State, action: Action): State {
         sukaKomentar: [],
         laporan: state.laporanServer,
         komentar: state.komentarServer,
+        notif: [],
       }
     case 'MULAI_MUAT_DATA':
       return { ...state, memuatData: true }
@@ -645,7 +704,8 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         })()
       : undefined
 
-    const rekomendasiSaya = [...state.rekomendasi]
+    const rekomendasiSaya = state.rekomendasi
+      .filter((r) => me.peran === 'peneliti' || r.titikId === me.titikId)
       .map((r) => ({
         ...r,
         dibaca: r.dibaca || state.rekomendasiDibaca.includes(r.id),

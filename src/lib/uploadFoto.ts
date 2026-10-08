@@ -8,13 +8,17 @@ const WORKER_URL =
   (import.meta.env.VITE_UPLOAD_URL as string | undefined) ||
   'https://iris-i-tallo-upload.mrv-nexus.workers.dev'
 
-export async function unggahFotoKeServer(dataUrlAtauBlob: string | Blob, token: string): Promise<string> {
+export async function unggahFotoKeServer(
+  dataUrlAtauBlob: string | Blob,
+  token: string,
+  jenis: 'laporan' | 'profil' = 'laporan',
+): Promise<string> {
   const blob =
     typeof dataUrlAtauBlob === 'string'
       ? await fetch(dataUrlAtauBlob).then((r) => r.blob())
       : dataUrlAtauBlob
 
-  const res = await fetch(`${WORKER_URL}/upload`, {
+  const res = await fetch(`${WORKER_URL}/upload${jenis === 'profil' ? '?jenis=profil' : ''}`, {
     method: 'POST',
     headers: {
       'Content-Type': blob.type || 'image/jpeg',

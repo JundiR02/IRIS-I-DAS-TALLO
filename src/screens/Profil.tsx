@@ -15,12 +15,13 @@ import {
   LogOut,
 } from 'lucide-react'
 import { useApp } from '../store/store'
-import { IMPACT, PERINGKAT_DESA, TREN_PAMPANG, titikById } from '../data/seed'
+import { titikById } from '../data/seed'
+import type { Status } from '../lib/types'
+import { STATUS } from '../lib/status'
 import { TOTAL_HARI } from '../lib/rotasi'
 import { waktuRelatif } from '../lib/format'
 import AppBar from '../components/AppBar'
 import Avatar from '../components/Avatar'
-import Sparkline from '../components/Sparkline'
 import StatusPill from '../components/StatusPill'
 import FotoLaporan from '../components/FotoLaporan'
 import Sheet from '../components/Sheet'
@@ -58,7 +59,73 @@ export default function Profil() {
     [state.laporan, me.id],
   )
 
-  const progres = Math.min(100, Math.round((me.hariMelapor / TOTAL_HARI) * 100))
+  // Semua angka di bawah dihitung dari laporan sungguhan (D1), bukan data contoh.
+  const hariMelapor = useMemo(() => new Set(riwayat.map((l) => l.waktuUpload.slice(0, 10))).size, [riwayat])
+  const poin = useMemo(
+    () => riwayat.reduce((n, l) => n + 10 + (l.statusVerifikasi !== 'menunggu' ? 50 : 0), 0),
+    [riwayat],
+  )
+  const badgeSaya = useMemo(() => {
+    const b: string[] = []
+    if (riwayat.length >= 1) b.push('Pelapor Baru')
+    if (hariMelapor >= 3) b.push('Sigap 3 Hari')
+    if (hariMelapor >= 7) b.push('Pelapor Rajin')
+    if (riwayat.some((l) => l.statusTerverifikasi === 'bahaya')) b.push('Sigap Banjir')
+    if (hariMelapor >= TOTAL_HARI) b.push('40 Hari Penuh')
+    return b
+  }, [riwayat, hariMelapor])
+  const progres = Math.min(100, Math.round((hariMelapor / TOTAL_HARI) * 100))
+
+  // Papan peringkat: laporan 30 hari terakhir per kelurahan; partisipasi =
+  // pelapor unik ÷ responden terdaftar di kelurahan itu.
+  const peringkat = useMemo(() => {
+    const batas = Date.now() - 30 * 86_400_000
+    const per = new Map<string, { laporan: number; pelapor: Set<string> }>()
+    for (const l of state.laporan) {
+      if (l.offline || +new Date(l.waktuUpload) < batas) continue
+      const kel = titikById(l.titikId)?.kelurahan ?? l.kelurahan
+      const d = per.get(kel) ?? { laporan: 0, pelapor: new Set<string>() }
+      d.laporan++
+      d.pelapor.add(l.wargaId)
+      per.set(kel, d)
+    }
+    return [...per.entries()]
+      .map(([kelurahan, d]) => {
+        const terdaftar = state.direktori.filter((w) => w.peran === 'warga' && w.kelurahan === kelurahan).length
+        return {
+          kelurahan,
+          laporan: d.laporan,
+          partisipasi: terdaftar ? Math.min(100, Math.round((d.pelapor.size / terdaftar) * 100)) : 100,
+        }
+      })
+      .sort((a, b) => b.laporan - a.laporan)
+  }, [state.laporan, state.direktori])
+
+  const dampak = useMemo(() => {
+    const masuk = state.laporan.filter((l) => !l.offline)
+    return {
+      dicek: masuk.filter((l) => l.statusVerifikasi !== 'menunggu').length,
+      titik: new Set(masuk.map((l) => l.titikId)).size,
+      pelapor: new Set(masuk.map((l) => l.wargaId)).size,
+      total: masuk.length,
+    }
+  }, [state.laporan])
+
+  // 7 hari terakhir di titik saya: status laporan terakhir tiap hari.
+  const tujuhHari = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date()
+      d.setDate(d.getDate() - (6 - i))
+      const kunci = d.toDateString()
+      const hariItu = state.laporan
+        .filter((l) => l.titikId === me.titikId && new Date(l.waktuUpload).toDateString() === kunci)
+        .sort((a, b) => +new Date(b.waktuUpload) - +new Date(a.waktuUpload))[0]
+      return {
+        label: d.toLocaleDateString('id-ID', { weekday: 'short' }),
+        status: (hariItu ? (hariItu.statusTerverifikasi ?? hariItu.statusPelapor) : undefined) as Status | undefined,
+      }
+    })
+  }, [state.laporan, me.titikId])
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -66,7 +133,7 @@ export default function Profil() {
       <div className="app-scroll flex-1 space-y-4 overflow-y-auto px-4 pb-28 pt-4">
         {/* Identitas */}
         <div className="flex items-center gap-3.5 rounded-card bg-white p-4 shadow-card">
-          <Avatar nama={me.nama} inisial={me.inisial} warna={me.warna} size={58} />
+          <Avatar nama={me.nama} inisial={me.inisial} warna={me.warna} foto={me.fotoUrl} size={58} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-lg font-extrabold text-ink">{me.nama}</p>
             <p className="text-[12px] text-ink-muted">
@@ -92,17 +159,17 @@ export default function Profil() {
                   <Info size={13} />
                 </button>
               </p>
-              <p className="text-3xl font-extrabold">{me.poin}</p>
+              <p className="text-3xl font-extrabold">{poin}</p>
             </div>
             <div className="flex items-center gap-1.5 rounded-pill bg-white/10 px-2.5 py-1 text-[11px] font-bold">
-              <Gift size={13} /> {me.hariMelapor}/{TOTAL_HARI} hari
+              <Gift size={13} /> {hariMelapor}/{TOTAL_HARI} hari
             </div>
           </div>
           <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/15">
             <div className="h-full rounded-full bg-lime" style={{ width: `${progres}%` }} />
           </div>
           <p className="mt-2 text-[12px] text-white/85">
-            {TOTAL_HARI - me.hariMelapor} hari lagi melapor untuk menyelesaikan 1 siklus & menukar
+            {Math.max(0, TOTAL_HARI - hariMelapor)} hari lagi melapor untuk menyelesaikan 1 siklus & menukar
             poin jadi pulsa/token lewat program desa.
           </p>
         </div>
@@ -114,7 +181,7 @@ export default function Profil() {
           </p>
           <div className="grid grid-cols-3 gap-2.5">
             {SEMUA_BADGE.map((b) => {
-              const punya = me.badge.includes(b.nama)
+              const punya = badgeSaya.includes(b.nama)
               return (
                 <div
                   key={b.nama}
@@ -136,7 +203,12 @@ export default function Profil() {
             <Trophy size={15} className="text-forest" /> Papan Peringkat Kelurahan
           </p>
           <div className="space-y-2">
-            {PERINGKAT_DESA.map((d, i) => {
+            {peringkat.length === 0 && (
+              <p className="rounded-2xl bg-bone-100 px-3 py-4 text-center text-[12px] text-ink-muted">
+                Belum ada laporan bulan ini. Kelurahan pertama yang melapor akan memimpin.
+              </p>
+            )}
+            {peringkat.map((d, i) => {
               const saya = d.kelurahan === titik.kelurahan
               return (
                 <div
@@ -171,7 +243,7 @@ export default function Profil() {
             })}
           </div>
           <p className="mt-2 text-[11px] text-ink-faint">
-            Jumlah laporan terkumpul bulan ini. Dipasang juga di kantor kelurahan.
+            Jumlah laporan 30 hari terakhir. Garis = persentase responden kelurahan yang ikut melapor.
           </p>
         </section>
 
@@ -181,14 +253,20 @@ export default function Profil() {
             <Sprout size={15} /> Laporan warga benar-benar dipakai
           </p>
           <p className="mt-1.5 text-[13px] text-ink-soft">
-            <b className="text-river-deep">{IMPACT.laporanDipakai} laporan warga</b> telah digunakan
-            untuk memperbarui peta kerawanan banjir resmi DAS Tallo.
+            {dampak.dicek > 0 ? (
+              <>
+                <b className="text-river-deep">{dampak.dicek} laporan warga</b> sudah dicek Tim Peneliti dan
+                dijadikan arahan untuk warga DAS Tallo.
+              </>
+            ) : (
+              'Belum ada laporan yang dicek peneliti. Laporan Anda akan jadi yang pertama.'
+            )}
           </p>
           <div className="mt-3 grid grid-cols-3 gap-2 text-center">
             {[
-              { n: IMPACT.titikDipetakan, l: 'titik dipetakan' },
-              { n: IMPACT.wargaAktif, l: 'warga aktif' },
-              { n: `${IMPACT.hariBerjalan} hari`, l: 'siklus berjalan' },
+              { n: dampak.total, l: 'laporan masuk' },
+              { n: `${dampak.titik}/10`, l: 'titik terpantau' },
+              { n: dampak.pelapor, l: 'warga melapor' },
             ].map((s) => (
               <div key={s.l} className="rounded-2xl bg-white/70 py-2">
                 <p className="text-base font-extrabold text-river-deep">{s.n}</p>
@@ -202,17 +280,24 @@ export default function Profil() {
         <section className="rounded-card bg-white p-4 shadow-card">
           <div className="flex items-center justify-between">
             <p className="flex items-center gap-1.5 text-[13px] font-extrabold text-ink">
-              <TrendingUp size={15} className="text-forest" /> Tinggi air titik {titik.nama}
+              <TrendingUp size={15} className="text-forest" /> Status titik {titik.nama}
             </p>
             <span className="text-[11px] font-semibold text-ink-faint">7 hari</span>
           </div>
-          <div className="mt-2 flex items-end gap-3">
-            <Sparkline values={TREN_PAMPANG.map((d) => d.nilai)} width={200} height={54} />
-            <div className="pb-1">
-              <p className="text-lg font-extrabold text-waspada-ink">+42 cm</p>
-              <p className="text-[10px] text-ink-muted">sejak Senin</p>
-            </div>
+          <div className="mt-3 grid grid-cols-7 gap-1.5 text-center">
+            {tujuhHari.map((h, i) => (
+              <div key={i}>
+                <span
+                  className={`mx-auto block h-7 w-7 rounded-full ${h.status ? STATUS[h.status].dot : 'bg-bone-200'}`}
+                  title={h.status ? STATUS[h.status].id : 'Tidak ada laporan'}
+                />
+                <span className="mt-1 block text-[10px] font-semibold text-ink-muted">{h.label}</span>
+              </div>
+            ))}
           </div>
+          <p className="mt-2 text-[11px] text-ink-faint">
+            Warna = status laporan terakhir hari itu (hijau aman, kuning waspada, merah bahaya). Abu-abu = belum ada laporan.
+          </p>
         </section>
 
         {/* Riwayat laporan */}

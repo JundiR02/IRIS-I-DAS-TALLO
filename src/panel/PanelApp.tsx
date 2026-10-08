@@ -11,6 +11,7 @@ import TabRingkasan from './TabRingkasan'
 import TabLaporan from './TabLaporan'
 import TabKomentar from './TabKomentar'
 import TabPengguna from './TabPengguna'
+import ProfilSaya from './ProfilSaya'
 import { BadgePeran, Modal } from './ui'
 
 const NAV = [
@@ -23,6 +24,7 @@ const NAV = [
 function KerangkaPanel() {
   const { sesi, isAdmin, keluar, masuk, muatUlang, memuat, galat, notif, ringkasan } = usePanel()
   const [gantiSandi, setGantiSandi] = useState(false)
+  const [ubahProfil, setUbahProfil] = useState(false)
   if (!sesi) return <PanelLogin />
 
   const nav = NAV.filter((n) => !n.admin || isAdmin)
@@ -36,9 +38,12 @@ function KerangkaPanel() {
             <Logo size={26} />
           </span>
           <span className="text-[11px] font-bold uppercase tracking-wider text-white/60">Panel</span>
+          <button onClick={() => setUbahProfil(true)} className="ml-auto lg:hidden" aria-label="Profil saya">
+            <Avatar nama={sesi.akun.nama} inisial={sesi.akun.inisial} warna={sesi.akun.warna} foto={sesi.akun.fotoUrl} size={36} />
+          </button>
           <button
             onClick={() => setGantiSandi(true)}
-            className="ml-auto grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
+            className="grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
             aria-label="Ganti kata sandi"
           >
             <KeyRound size={16} />
@@ -72,13 +77,20 @@ function KerangkaPanel() {
           ))}
         </nav>
         <div className="hidden border-t border-white/10 p-4 lg:block">
-          <div className="flex items-center gap-2.5">
-            <Avatar nama={sesi.akun.nama} inisial={sesi.akun.inisial} warna={sesi.akun.warna} size={36} />
+          <button
+            onClick={() => setUbahProfil(true)}
+            className="-m-2 flex w-[calc(100%+1rem)] items-center gap-2.5 rounded-xl p-2 text-left hover:bg-white/10"
+            title="Ubah nama & foto profil"
+          >
+            <Avatar nama={sesi.akun.nama} inisial={sesi.akun.inisial} warna={sesi.akun.warna} foto={sesi.akun.fotoUrl} size={40} />
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-bold">{sesi.akun.nama}</p>
-              <BadgePeran peran={sesi.akun.peran} />
+              <span className="flex items-center gap-1.5">
+                <BadgePeran peran={sesi.akun.peran} />
+                <span className="text-[11px] text-white/50">Ubah profil</span>
+              </span>
             </div>
-          </div>
+          </button>
           <button
             onClick={() => setGantiSandi(true)}
             className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20"
@@ -120,6 +132,12 @@ function KerangkaPanel() {
           </Routes>
         </div>
       </main>
+
+      {ubahProfil && (
+        <Modal judul="Profil saya" onTutup={() => setUbahProfil(false)} lebar="max-w-md">
+          <ProfilSaya onTutup={() => setUbahProfil(false)} />
+        </Modal>
+      )}
 
       {gantiSandi && (
         <Modal judul="Ganti kata sandi" onTutup={() => setGantiSandi(false)} lebar="max-w-sm">

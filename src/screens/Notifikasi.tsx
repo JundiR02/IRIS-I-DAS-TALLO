@@ -51,6 +51,11 @@ export default function Notifikasi() {
         }
       />
       <div className="app-scroll flex-1 overflow-y-auto px-4 pb-6 pt-4">
+        {kelompok.length === 0 && (
+          <p className="rounded-card bg-white px-4 py-10 text-center text-sm text-ink-muted shadow-soft">
+            Belum ada notifikasi. Anda akan diberi tahu saat laporan Anda dicek peneliti atau dikomentari warga.
+          </p>
+        )}
         {kelompok.map((grup) => (
           <div key={grup.label} className="mb-4">
             <p className="mb-2 px-1 text-[11px] font-extrabold uppercase tracking-wide text-ink-faint">

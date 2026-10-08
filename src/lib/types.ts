@@ -37,6 +37,8 @@ export interface Warga {
   poin: number
   badge: string[]
   peran: 'warga' | 'peneliti'
+  /** foto profil (R2), opsional */
+  fotoUrl?: string
 }
 
 export interface Komentar {

@@ -19,10 +19,9 @@ import { noUrutHariIni } from '../lib/rotasi'
 
 // Cocok dengan worker-upload/schema.sql — PIN demo warga (ganti sebelum pakai
 // ke 40 responden sungguhan). Akun peneliti/admin sengaja tidak ada di sini.
-const AKUN_DEMO = [
-  { id: 'w-me', jenis: 'masyarakat', noUrut: 7, rahasia: '1007', label: 'no. 7' },
-  { id: 'w-06', jenis: 'masyarakat', noUrut: 27, rahasia: '1027', label: 'no. 27' },
-] as const
+// Akun contoh sudah dihapus dari database produksi — isi lagi kalau perlu
+// pintasan login untuk peninjau (pakai akun uji, bukan responden asli).
+const AKUN_DEMO: { id: string; noUrut: number; rahasia: string; label: string }[] = []
 
 function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (

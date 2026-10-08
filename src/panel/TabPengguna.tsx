@@ -127,7 +127,7 @@ export default function TabPengguna() {
                 <tr key={a.id} className={a.aktif ? '' : 'bg-bone-50 text-ink-faint'}>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2.5">
-                      <Avatar nama={a.nama} inisial={a.inisial} warna={a.aktif ? a.warna : '#9CA599'} size={32} />
+                      <Avatar nama={a.nama} inisial={a.inisial} warna={a.aktif ? a.warna : '#9CA599'} foto={a.fotoUrl} size={32} />
                       <span className="font-bold text-ink">{a.nama}</span>
                       {a.id === sesi?.akun.id && <span className="text-[11px] text-ink-faint">(Anda)</span>}
                     </div>

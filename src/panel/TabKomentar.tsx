@@ -97,6 +97,7 @@ export default function TabKomentar() {
                 nama={p?.nama ?? 'Warga'}
                 inisial={p?.inisial ?? '?'}
                 warna={p?.warna ?? '#6B7770'}
+                foto={p?.fotoUrl}
                 size={36}
                 peneliti={p?.peran === 'peneliti'}
               />

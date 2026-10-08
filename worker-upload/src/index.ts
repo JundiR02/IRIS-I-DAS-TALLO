@@ -247,6 +247,7 @@ interface BarisAkun {
   token_versi: number
   dibuat: string | null
   login_terakhir: string | null
+  foto_url: string | null
 }
 
 /** Profil publik — dipakai aplikasi untuk menampilkan nama/avatar di feed. Tanpa kredensial. */
@@ -260,6 +261,7 @@ function profilKeJson(r: BarisAkun) {
     warna: r.warna ?? '#6B7770',
     kelurahan: r.kelurahan ?? '-',
     titikId: r.titik_id ?? undefined,
+    fotoUrl: r.foto_url ?? undefined,
     aktif: !!r.aktif,
   }
 }
@@ -460,6 +462,39 @@ export default {
       return json(cors, 200, { token, warga: profilKeJson(row) })
     }
 
+    // Ubah profil sendiri: nama tampilan & foto profil (semua peran).
+    if (request.method === 'POST' && url.pathname === '/auth/profil') {
+      const akun = await wargaDariRequest(request, env)
+      if (!akun) return err(cors, 401, SESI_TIDAK_VALID)
+      const b = (await request.json().catch(() => null)) as { nama?: string; fotoUrl?: string | null } | null
+      if (!b) return err(cors, 400, 'Data tidak valid.')
+      const row = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(akun.id).first<BarisAkun>()
+      if (!row) return err(cors, 401, SESI_TIDAK_VALID)
+
+      let nama = row.nama
+      if (b.nama !== undefined) {
+        nama = typeof b.nama === 'string' ? b.nama.trim().replace(/\s+/g, ' ') : ''
+        if (nama.length < 2 || nama.length > 60) return err(cors, 400, 'Nama 2–60 karakter.')
+      }
+      let fotoUrl = row.foto_url
+      if (b.fotoUrl !== undefined) {
+        // Hanya foto yang memang diunggah ke Worker ini (prefix profil/).
+        if (b.fotoUrl !== null && (typeof b.fotoUrl !== 'string' || !b.fotoUrl.startsWith(`${url.origin}/foto/profil/`))) {
+          return err(cors, 400, 'Foto profil tidak valid.')
+        }
+        fotoUrl = b.fotoUrl
+      }
+      await env.DB.prepare('UPDATE warga_auth SET nama = ?, inisial = ?, foto_url = ? WHERE id = ?')
+        .bind(nama, nama !== row.nama ? inisialDari(nama ?? row.id) : row.inisial, fotoUrl, row.id)
+        .run()
+      // Foto lama yang diganti/dihapus ikut dibuang dari R2.
+      const kunciLama = row.foto_url && row.foto_url !== fotoUrl ? row.foto_url.split('/foto/')[1] : null
+      if (kunciLama) await env.FOTO_BUCKET.delete(decodeURIComponent(kunciLama))
+
+      const baru = await env.DB.prepare('SELECT * FROM warga_auth WHERE id = ?').bind(row.id).first<BarisAkun>()
+      return json(cors, 200, profilKeJson(baru!))
+    }
+
     // Direktori publik (nama/avatar/kelurahan) — pengganti daftar WARGA yang
     // sebelumnya cuma ditulis tetap di src/data/seed.ts. Akun admin tidak ikut.
     if (request.method === 'GET' && url.pathname === '/warga') {
@@ -484,7 +519,8 @@ export default {
       if (body.byteLength > MAKS_BYTE_FOTO) return err(cors, 413, 'File terlalu besar (maksimal 8MB).')
 
       const ekstensi = contentType === 'image/png' ? 'png' : 'jpg'
-      const kunci = `laporan/${crypto.randomUUID()}.${ekstensi}`
+      const folder = url.searchParams.get('jenis') === 'profil' ? 'profil' : 'laporan'
+      const kunci = `${folder}/${crypto.randomUUID()}.${ekstensi}`
       await env.FOTO_BUCKET.put(kunci, body, { httpMetadata: { contentType } })
 
       return json(cors, 200, { key: kunci, url: `${url.origin}/foto/${kunci}` })

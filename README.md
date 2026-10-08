@@ -238,7 +238,13 @@ cd .. && npm run build && firebase deploy --only hosting
 ```
 
 Database baru dari nol: `schema.sql` → `migration-2-login-attempts.sql` →
-`migration-3-akun-admin.sql`.
+`migration-3-akun-admin.sql` → `migration-4-foto-profil.sql`.
+
+**Profil sendiri** (`POST /auth/profil`): setiap akun bisa mengubah nama tampilan &
+foto profil (dipotong persegi 320px, disimpan di R2 `profil/`). Di Panel: klik
+nama/avatar di kiri bawah. Statistik Profil warga (poin, lencana, peringkat,
+status 7 hari), Rekomendasi, dan Notifikasi kini dihitung dari data D1 sungguhan —
+data contoh `seed.ts` tidak lagi tampil di aplikasi (kecuali daftar titik pantau).
 
 Uji lokal tanpa menyentuh database produksi:
 

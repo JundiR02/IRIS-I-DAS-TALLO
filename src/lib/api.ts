@@ -44,6 +44,8 @@ export interface ProfilApi {
   warna: string
   kelurahan: string
   titikId?: string
+  /** foto profil (R2); kosong = avatar inisial */
+  fotoUrl?: string
   aktif: boolean
 }
 
@@ -77,6 +79,11 @@ export function gantiRahasia(token: string, lama: string, baru: string): Promise
     headers: withAuth(token),
     body: JSON.stringify({ lama, baru }),
   })
+}
+
+/** Ubah nama tampilan / foto profil sendiri. fotoUrl null = hapus foto. */
+export function ubahProfilSaya(token: string, data: { nama?: string; fotoUrl?: string | null }): Promise<ProfilApi> {
+  return permintaan<ProfilApi>('/auth/profil', { method: 'POST', headers: withAuth(token), body: JSON.stringify(data) })
 }
 
 export function ambilSaya(token: string): Promise<ProfilApi> {
