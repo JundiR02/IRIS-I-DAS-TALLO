@@ -56,38 +56,6 @@ export function Modal({
   )
 }
 
-export function KartuAngka({
-  label,
-  nilai,
-  catatan,
-  nada = 'netral',
-  onClick,
-}: {
-  label: string
-  nilai: number | string
-  catatan?: string
-  nada?: 'netral' | 'waspada' | 'bahaya' | 'aman'
-  onClick?: () => void
-}) {
-  const warna = {
-    netral: 'bg-white',
-    aman: 'bg-aman-wash',
-    waspada: 'bg-waspada-wash',
-    bahaya: 'bg-bahaya-wash',
-  }[nada]
-  const Tag = onClick ? 'button' : 'div'
-  return (
-    <Tag
-      onClick={onClick}
-      className={`rounded-card ${warna} p-4 text-left shadow-soft ${onClick ? 'transition-transform hover:-translate-y-0.5' : ''}`}
-    >
-      <p className="text-[12px] font-bold text-ink-muted">{label}</p>
-      <p className="mt-1 text-3xl font-extrabold tabular-nums text-ink">{nilai}</p>
-      {catatan && <p className="mt-0.5 text-[11.5px] text-ink-muted">{catatan}</p>}
-    </Tag>
-  )
-}
-
 const PERAN_LABEL: Record<Peran, { teks: string; kelas: string }> = {
   warga: { teks: 'Masyarakat', kelas: 'bg-river-mist text-river-deep' },
   peneliti: { teks: 'Peneliti', kelas: 'bg-forest/10 text-forest' },

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Bell, ChevronRight, TriangleAlert, CloudUpload, RefreshCw, Hourglass, MapPinned } from 'lucide-react'
+import { Bell, ChevronRight, TriangleAlert, CloudUpload, RefreshCw, Hourglass, MapPinned, Loader2, CloudOff } from 'lucide-react'
 import { useApp } from '../store/store'
 import { TITIK, titikById } from '../data/seed'
 import { STATUS } from '../lib/status'
@@ -49,6 +49,7 @@ export default function Beranda() {
   // Jujur soal usia data: sistem cuma terima 1 laporan/hari secara giliran,
   // jadi "status hari ini" bisa saja masih data kemarin sampai giliran tiba.
   const dataHariIni = laporanTerakhirWilayah ? isHariIni(laporanTerakhirWilayah.waktuUpload) : false
+  const tanpaData = !laporanTerakhirWilayah && (state.memuatData || state.gagalMuatData)
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -71,7 +72,27 @@ export default function Beranda() {
       />
 
       <div className="app-scroll flex-1 space-y-4 overflow-y-auto px-4 pb-28 pt-4">
-        {/* Kartu status wilayah — 1 layar, 1 pesan utama */}
+        {/* Kartu status wilayah — 1 layar, 1 pesan utama. Selama data belum
+            sampai (memuat/gagal), JANGAN menyatakan "Aman" tanpa dasar. */}
+        {tanpaData ? (
+          <div
+            role="status"
+            className="flex items-center gap-3 rounded-card bg-bone-100 p-5 shadow-soft"
+          >
+            <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-white text-ink-muted">
+              {state.memuatData ? <Loader2 size={26} className="animate-spin" aria-hidden /> : <CloudOff size={26} aria-hidden />}
+            </span>
+            <span>
+              <span className="block text-lg font-extrabold leading-tight text-ink">
+                {state.memuatData ? 'Memuat status sungai…' : 'Status sungai belum bisa dimuat'}
+              </span>
+              <span className="mt-0.5 block text-[13px] text-ink-muted">
+                Titik {titikById(me.titikId).nama}
+                {state.memuatData ? '' : ' · tekan Coba lagi di bawah setelah ada sinyal'}
+              </span>
+            </span>
+          </div>
+        ) : (
         <button
           onClick={() => navigate('/peta')}
           className={`block w-full overflow-hidden rounded-card ${sm.wash} p-5 text-left shadow-soft`}
@@ -116,6 +137,7 @@ export default function Beranda() {
               : ' · belum pernah ada laporan di titik ini'}
           </p>
         </button>
+        )}
 
         {/* Peringatan dini personal (bagian 6.1) — jelas ini titik TETANGGA, bukan wilayah sendiri,
             supaya tidak salah dibaca sebagai status wilayah sendiri yang baru saja ditampilkan di atas. */}
@@ -175,6 +197,8 @@ export default function Beranda() {
             {TITIK.map((t) => {
               const st = statusPerTitik.get(t.id) ?? 'aman'
               const meHere = t.id === me.titikId
+              // Data belum sampai & titik ini belum punya laporan: abu netral, bukan "aman".
+              const netral = (state.memuatData || state.gagalMuatData) && !state.laporan.some((l) => l.titikId === t.id)
               return (
                 <button
                   key={t.id}
@@ -182,10 +206,12 @@ export default function Beranda() {
                   className="flex w-16 shrink-0 flex-col items-center gap-1.5"
                 >
                   <span
-                    className={`grid h-16 w-16 place-items-center rounded-full bg-white p-[3px] ring-2 ${STATUS[st].ring}`}
+                    className={`grid h-16 w-16 place-items-center rounded-full bg-white p-[3px] ring-2 ${netral ? 'ring-bone-300' : STATUS[st].ring}`}
                   >
-                    <span className={`grid h-full w-full place-items-center rounded-full ${STATUS[st].wash} ${STATUS[st].text}`}>
-                      <StatusIcon status={st} size={24} strokeWidth={2.4} />
+                    <span
+                      className={`grid h-full w-full place-items-center rounded-full ${netral ? 'bg-bone-100 text-ink-faint' : `${STATUS[st].wash} ${STATUS[st].text}`}`}
+                    >
+                      {netral ? <span aria-label="belum ada data">–</span> : <StatusIcon status={st} size={24} strokeWidth={2.4} />}
                     </span>
                   </span>
                   <span className={`text-center text-[10px] font-bold leading-tight ${meHere ? 'text-forest' : 'text-ink-muted'}`}>
@@ -210,9 +236,34 @@ export default function Beranda() {
           />
         </div>
 
-        {feed.length === 0 ? (
+        {/* Gagal memuat: data tersimpan (kalau ada) tetap tampil di bawahnya. */}
+        {state.gagalMuatData && (
+          <div role="alert" className="flex items-center gap-3 rounded-card bg-waspada-wash px-4 py-3">
+            <CloudOff size={20} className="shrink-0 text-waspada-ink" aria-hidden />
+            <p className="flex-1 text-[12.5px] font-semibold text-waspada-ink">
+              Laporan terbaru gagal dimuat. {feed.length > 0 ? 'Yang tampil di bawah adalah data tersimpan.' : 'Periksa sinyal Anda.'}
+            </p>
+            <button
+              onClick={actions.muatUlangData}
+              className="tap flex items-center gap-1 rounded-pill bg-white px-3 py-1.5 text-xs font-bold text-waspada-ink"
+            >
+              <RefreshCw size={12} aria-hidden /> Coba lagi
+            </button>
+          </div>
+        )}
+
+        {feed.length === 0 && state.memuatData ? (
+          <p
+            role="status"
+            className="flex items-center justify-center gap-2 rounded-card bg-white px-4 py-8 text-sm text-ink-muted shadow-soft"
+          >
+            <Loader2 size={16} className="animate-spin" aria-hidden /> Memuat laporan warga…
+          </p>
+        ) : feed.length === 0 && !state.gagalMuatData ? (
           <p className="rounded-card bg-white px-4 py-8 text-center text-sm text-ink-muted shadow-soft">
-            Belum ada laporan di wilayah Anda hari ini.
+            {filter === 'wilayah'
+              ? `Belum ada laporan dari titik ${titikById(me.titikId).nama}. Laporan muncul di sini setelah warga di titik Anda melapor.`
+              : 'Belum ada laporan warga. Laporan pertama akan muncul di sini begitu ada yang melapor.'}
           </p>
         ) : (
           feed.map((l) => <PostCard key={l.id} laporan={l} />)

@@ -232,7 +232,6 @@ export default function Lapor() {
       <div className="app-scroll flex-1 overflow-y-auto px-5 pb-6 pt-4">
         {step === 1 && (
           <StepShell
-            no={1}
             judul="Ambil foto sungai"
             sub="Foto dari titik yang sama tiap hari, mis. dari sisi jembatan. Mendukung JPEG & file RAW kamera (CR2)."
           >
@@ -396,7 +395,6 @@ export default function Lapor() {
 
         {step === 2 && (
           <StepShell
-            no={2}
             judul="Pilih kondisi sungai"
             sub="Tekan satu tombol. Pakai warna, tidak perlu istilah teknis."
           >
@@ -445,7 +443,6 @@ export default function Lapor() {
 
         {step === 3 && (
           <StepShell
-            no={3}
             judul="Rekam catatan suara"
             sub="Opsional — ceritakan yang Anda lihat (maksimal 10 detik)."
           >
@@ -471,7 +468,7 @@ export default function Lapor() {
         )}
 
         {step === 4 && status !== null && foto && (
-          <StepShell no={4} judul="Periksa lalu kirim" sub="Pastikan sudah benar sebelum dikirim.">
+          <StepShell judul="Periksa lalu kirim" sub="Pastikan sudah benar sebelum dikirim.">
             <div className="overflow-hidden rounded-card bg-white shadow-card">
               <div className="relative aspect-[16/10]">
                 <img src={foto.dataUrl} alt="Foto sungai" className="h-full w-full object-cover" />
@@ -571,20 +568,18 @@ function FlowHeader({
 }
 
 function StepShell({
-  no,
   judul,
   sub,
   children,
 }: {
-  no: number
   judul: string
   sub: string
   children: ReactNode
 }) {
   return (
     <div className="animate-fade-up">
-      <span className="text-[11px] font-bold uppercase tracking-wide text-forest">Langkah {no}</span>
-      <h1 className="mt-1 text-xl font-extrabold leading-tight text-ink">{judul}</h1>
+      {/* Nomor langkah sudah ada di header (1/4 + bilah progres) — tidak diulang di sini. */}
+      <h1 className="text-xl font-extrabold leading-tight text-ink">{judul}</h1>
       <p className="mb-4 mt-1 text-[13px] text-ink-muted">{sub}</p>
       {children}
     </div>

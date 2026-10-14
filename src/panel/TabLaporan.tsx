@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { CheckCircle2, PencilLine, Trash2, Siren, Mic, MapPin, Search } from 'lucide-react'
 import { TITIK, titikById } from '../data/seed'
@@ -43,6 +43,18 @@ export default function TabLaporan() {
   const [cari, setCari] = useState('')
   const [dipilih, setDipilih] = useState<LaporanApi | null>(null)
   const [hapus, setHapus] = useState<LaporanApi | null>(null)
+
+  // ?buka=<id> (dari antrian di Ringkasan) langsung membuka formulir verifikasinya.
+  const buka = params.get('buka')
+  useEffect(() => {
+    if (!buka) return
+    const l = laporan.find((x) => x.id === buka)
+    if (!l) return
+    setDipilih(l)
+    const sisa = new URLSearchParams(params)
+    sisa.delete('buka')
+    setParams(sisa, { replace: true })
+  }, [buka, laporan, params, setParams])
 
   const daftar = useMemo(() => {
     const q = cari.trim().toLowerCase()

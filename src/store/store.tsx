@@ -81,6 +81,10 @@ interface State extends Persisted {
   rekomendasi: Rekomendasi[]
   notif: Notif[]
   memuatData: boolean
+  /** pengambilan data server terakhir gagal (yang tampil = data tersimpan saja) */
+  gagalMuatData: boolean
+  /** dinaikkan untuk memicu ambil ulang data server */
+  putaranMuat: number
   toast: { id: number; teks: string; nada?: NadaToast } | null
 }
 
@@ -282,7 +286,10 @@ function buildState(p: Persisted): State {
     rekomendasi: [],
     // Belum ada sistem notifikasi di server.
     notif: [],
-    memuatData: false,
+    // Sudah login = data server pasti akan diambil; jangan sempat tampil "kosong".
+    memuatData: !!p.auth,
+    gagalMuatData: false,
+    putaranMuat: 0,
     toast: null,
   }
 }
@@ -334,6 +341,8 @@ type Action =
   | { type: 'LOGOUT' }
   | { type: 'SET_DIREKTORI'; direktori: Warga[] }
   | { type: 'MULAI_MUAT_DATA' }
+  | { type: 'GAGAL_MUAT_DATA' }
+  | { type: 'MUAT_ULANG_DATA' }
   | { type: 'DATA_SERVER_DIMUAT'; laporan: Laporan[]; komentar: Komentar[]; direktori?: Warga[] }
   | { type: 'TAMBAH_LAPORAN_LOKAL'; draft: DraftLaporan }
   | { type: 'LAPORAN_SERVER_BARU'; laporan: Laporan }
@@ -404,9 +413,15 @@ function reducer(state: State, action: Action): State {
         laporan: state.laporanServer,
         komentar: state.komentarServer,
         notif: [],
+        memuatData: false,
+        gagalMuatData: false,
       }
     case 'MULAI_MUAT_DATA':
-      return { ...state, memuatData: true }
+      return { ...state, memuatData: true, gagalMuatData: false }
+    case 'GAGAL_MUAT_DATA':
+      return { ...state, memuatData: false, gagalMuatData: true }
+    case 'MUAT_ULANG_DATA':
+      return { ...state, putaranMuat: state.putaranMuat + 1 }
     case 'DATA_SERVER_DIMUAT':
       return gabungkanData({
         ...state,
@@ -591,6 +606,7 @@ interface StoreValue {
     selesaiOnboarding: () => void
     toast: (teks: string, nada?: NadaToast) => void
     tutupToast: () => void
+    muatUlangData: () => void
     reset: () => void
   }
 }
@@ -670,15 +686,14 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (batal) return
-        // Matikan indikator muat tanpa mengganti data — tetap pakai data lama/seed.
-        dispatch({ type: 'DATA_SERVER_DIMUAT', laporan: state.laporanServer, komentar: state.komentarServer })
-        dispatch({ type: 'TOAST', teks: 'Gagal memuat data terbaru — menampilkan data tersimpan.', nada: 'peringatan' })
+        // Data lama tetap dipakai; layar menampilkan status gagal + tombol Coba lagi.
+        dispatch({ type: 'GAGAL_MUAT_DATA' })
       })
     return () => {
       batal = true
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [tokenUntukMuat])
+  }, [tokenUntukMuat, state.putaranMuat])
 
   // Auto-tutup toast
   useEffect(() => {
@@ -871,6 +886,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         selesaiOnboarding: () => dispatch({ type: 'SELESAI_ONBOARDING' }),
         toast: (teks, nada) => dispatch({ type: 'TOAST', teks, nada }),
         tutupToast: () => dispatch({ type: 'TUTUP_TOAST' }),
+        muatUlangData: () => dispatch({ type: 'MUAT_ULANG_DATA' }),
         reset: () => dispatch({ type: 'RESET' }),
       },
     }
