@@ -7,7 +7,7 @@ import Logo from '../components/Logo'
 type Jenis = 'masyarakat' | 'peneliti'
 
 const INPUT =
-  'w-full rounded-pill border-2 border-bone-200 bg-white px-4 py-3.5 text-lg font-bold text-ink outline-none placeholder:text-ink-faint placeholder:font-normal focus:border-forest'
+  'w-full rounded-pill border-2 border-garis bg-white px-4 py-3.5 text-lg font-bold text-ink outline-none placeholder:text-ink-faint placeholder:font-normal focus:border-forest'
 const LABEL = 'mb-1.5 block text-[12px] font-bold text-ink-soft'
 
 function pesanGalat(e: unknown): string {
@@ -172,9 +172,9 @@ function FormDaftar({ keMasuk }: { keMasuk: () => void }) {
     e.preventDefault()
     setError(null)
     if (nama.trim().length < 2) return setError('Isi nama lengkap Anda.')
-    if (!kontak.trim()) return setError('Isi email atau nomor HP — dipakai untuk masuk.')
+    if (!kontak.trim()) return setError('Isi email atau nomor HP. Ini yang dipakai untuk masuk.')
     if (sandi.length < 8) return setError('Kata sandi minimal 8 karakter.')
-    if (sandi !== ulang) return setError('Ulangi kata sandi — keduanya belum sama.')
+    if (sandi !== ulang) return setError('Ulangi kata sandi: keduanya belum sama.')
     setMemuat(true)
     try {
       await actions.daftar({
@@ -242,7 +242,7 @@ function FormDaftar({ keMasuk }: { keMasuk: () => void }) {
             Buat kata sandi
           </label>
           <input id="d-sandi" type="password" autoComplete="new-password" value={sandi} onChange={(e) => setSandi(e.target.value)} className={INPUT} />
-          <p className="mt-1 px-1 text-[11.5px] text-ink-muted">Minimal 8 karakter. Hanya Anda yang tahu — admin pun tidak.</p>
+          <p className="mt-1 px-1 text-[11.5px] text-ink-muted">Minimal 8 karakter. Hanya Anda yang tahu, admin pun tidak.</p>
         </div>
         <div>
           <label htmlFor="d-ulang" className={LABEL}>

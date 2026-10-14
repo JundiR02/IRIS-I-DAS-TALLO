@@ -19,12 +19,17 @@ export default {
           200: '#E4E2DD',
           300: '#D0CDC6',
         },
+        // muted/faint diukur dengan contrast checker: >= 4.5:1 (WCAG AA) di
+        // putih, bone-50 dan bone-100; muted juga di bone-200 (segmented).
         ink: {
           DEFAULT: '#262626',
           soft: '#454441',
-          muted: '#6A6863',
-          faint: '#8C8A85',
+          muted: '#575550',
+          faint: '#6C6A65',
         },
+        // Garis tepi kolom isian (WCAG 1.4.11, batas komponen >= 3:1):
+        // 3.73:1 di putih (isi kolom), 3.30:1 di bone-100 (latar sekitarnya).
+        garis: '#87847D',
         // dulu hijau hutan — kini arang logo
         forest: {
           DEFAULT: '#303030',
@@ -34,7 +39,7 @@ export default {
         lime: {
           DEFAULT: '#C7AE4C',
           bright: '#D6BE5C',
-          deep: '#8A7428',
+          deep: '#6F5D1E',
         },
         // dulu biru sungai — kini abu arang menengah (bukan warna baru)
         river: {

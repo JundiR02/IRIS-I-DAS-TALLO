@@ -218,7 +218,7 @@ function FormVerifikasi({ laporan: l, onTutup }: { laporan: LaporanApi; onTutup:
     // Komentar tersemat dibuat di server — ambil ulang supaya tab Komentar ikut sinkron.
     if (semat && teks.trim()) void muatUlang()
     else segarkanRingkasan()
-    beriNotif('Verifikasi tersimpan — rekomendasi tampil di aplikasi warga.')
+    beriNotif('Verifikasi tersimpan. Rekomendasi sudah tampil di aplikasi warga.')
     onTutup()
   }
 
@@ -296,7 +296,7 @@ function FormVerifikasi({ laporan: l, onTutup }: { laporan: LaporanApi; onTutup:
               }}
               className={`${INPUT} resize-y leading-relaxed`}
             />
-            <p className="mt-1 text-[11.5px] text-ink-muted">Pakai kalimat sehari-hari & tindakan konkret — dibaca warga SD–SMA.</p>
+            <p className="mt-1 text-[11.5px] text-ink-muted">Pakai kalimat sehari-hari dan tindakan konkret, karena dibaca warga berpendidikan SD sampai SMA.</p>
             <label className="mt-2 flex items-center gap-2 text-[13px] font-semibold text-ink-soft">
               <input type="checkbox" checked={semat} onChange={(e) => setSemat(e.target.checked)} className="h-4 w-4 accent-forest" />
               Sematkan juga sebagai komentar "Rekomendasi Resmi" di diskusi

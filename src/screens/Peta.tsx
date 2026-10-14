@@ -230,7 +230,7 @@ export default function Peta() {
               {dataTitik.filter((d) => d.statusIni === 'bahaya').length} titik Bahaya ·{' '}
               {dataTitik.filter((d) => d.statusIni === 'waspada').length} Waspada · sisanya Aman
             </p>
-            <span className="text-[11px] font-bold text-ink-faint">{TITIK.length} titik</span>
+            <span className="text-[11px] font-bold text-ink-muted">{TITIK.length} titik</span>
           </div>
         </div>
       </div>

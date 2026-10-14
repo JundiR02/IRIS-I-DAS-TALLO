@@ -77,7 +77,7 @@ function KerangkaPanel() {
                 <span className="max-w-full truncate sm:hidden">{pendek}</span>
                 <span className="hidden whitespace-nowrap sm:inline">{label}</span>
                 {!!jumlah && (
-                  <span className="absolute right-1.5 top-1 rounded-pill bg-waspada px-1.5 text-[11px] text-white sm:static sm:ml-auto">
+                  <span className="absolute right-1.5 top-1 rounded-pill bg-waspada px-1.5 text-[11px] text-ink sm:static sm:ml-auto">
                     {jumlah}
                   </span>
                 )}

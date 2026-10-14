@@ -18,7 +18,7 @@ export default function BottomNav() {
   const handleLapor = () => {
     if (!giliranHariIni) {
       actions.toast(
-        `Giliran Anda: ${tanggalGiliran(state.hariKe, me.noUrut)} — atau pakai Lapor Darurat`,
+        `Giliran Anda: ${tanggalGiliran(state.hariKe, me.noUrut)}. Atau pakai Lapor Darurat.`,
         'info',
       )
     }

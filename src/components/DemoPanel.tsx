@@ -45,7 +45,7 @@ export default function DemoPanel() {
     try {
       await actions.loginMasyarakat(String(akun.noUrut), akun.rahasia)
     } catch {
-      actions.toast('Gagal masuk — periksa apakah kredensial demo masih sesuai di database.', 'peringatan')
+      actions.toast('Gagal masuk. Periksa apakah kredensial demo masih sesuai di database.', 'peringatan')
     } finally {
       setMasukMemuat(null)
     }
@@ -63,7 +63,7 @@ export default function DemoPanel() {
           </span>
           <span className="flex-1">
             <span className="block text-sm font-extrabold text-ink">Panel Demo</span>
-            <span className="block text-[11px] text-ink-muted">Kontrol untuk peninjau — bukan bagian aplikasi</span>
+            <span className="block text-[11px] text-ink-muted">Kontrol untuk peninjau, bukan bagian aplikasi</span>
           </span>
           <ChevronDown size={16} className={`text-ink-muted transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -189,7 +189,7 @@ export default function DemoPanel() {
                 <Radio size={14} /> Kondisi lapangan
               </p>
               <p className="mb-2 text-[11px] text-ink-muted">
-                DAS Tallo bukan selalu kondisi mulus — coba tinjau layar Lapor saat kondisi ini aktif.
+                Kondisi di DAS Tallo tidak selalu mulus. Coba tinjau layar Lapor saat kondisi ini aktif.
               </p>
               <div className="space-y-2.5">
                 <label className="flex items-center justify-between gap-2 font-bold text-ink">

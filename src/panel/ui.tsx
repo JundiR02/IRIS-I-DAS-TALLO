@@ -14,7 +14,7 @@ export const BTN = {
 }
 
 export const INPUT =
-  'min-h-11 w-full rounded-xl border-2 border-bone-200 bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest'
+  'min-h-11 w-full rounded-xl border-2 border-garis bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest'
 
 export const LABEL = 'mb-1 block text-[12px] font-bold text-ink-soft'
 
@@ -74,6 +74,6 @@ export function Kosong({ children }: { children: ReactNode }) {
 
 /** "7 Okt 2026, 14.05" */
 export function tanggalJam(iso?: string): string {
-  if (!iso) return '—'
+  if (!iso) return 'Belum ada'
   return new Date(iso).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }

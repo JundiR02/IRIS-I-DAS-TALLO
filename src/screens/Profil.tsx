@@ -366,7 +366,7 @@ export default function Profil() {
             {state.lang === 'mks' && (
               <p className="mt-2 text-[11px] leading-relaxed text-ink-faint">
                 Mode Mangkasara baru menerjemahkan istilah status utama (Aman/Waspada/Bahaya).
-                Bagian lain masih Bahasa Indonesia — menyusul setelah divalidasi penutur asli.
+                Bagian lain masih Bahasa Indonesia sampai terjemahannya divalidasi penutur asli.
               </p>
             )}
           </div>
@@ -453,7 +453,7 @@ export default function Profil() {
         <div className="mt-3 rounded-2xl bg-lime/20 px-3.5 py-3">
           <p className="text-[13px] font-bold text-forest-deep">500 poin ≈ Rp 25.000 pulsa/token</p>
           <p className="mt-1 text-[12px] text-ink-soft">
-            Contoh ilustrasi — nilai tukar sebenarnya mengikuti kesepakatan program desa/CSR
+            Ini contoh ilustrasi. Nilai tukar sebenarnya mengikuti kesepakatan program desa/CSR
             setempat, diumumkan sebelum siklus 40 hari dimulai.
           </p>
         </div>

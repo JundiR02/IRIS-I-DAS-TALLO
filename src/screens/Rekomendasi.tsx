@@ -19,7 +19,7 @@ export default function Rekomendasi() {
           <Lightbulb size={18} className="mt-0.5 shrink-0 text-forest" />
           <p className="text-[13px] leading-snug text-ink-soft">
             Arahan singkat dari Tim Peneliti setelah mengecek laporan di wilayah Anda. Ikuti langkahnya,
-            lalu tandai "Sudah dilakukan" — peneliti akan tahu arahannya sampai ke warga.
+            lalu tandai "Sudah dilakukan" supaya peneliti tahu arahannya sampai ke warga.
           </p>
         </div>
 

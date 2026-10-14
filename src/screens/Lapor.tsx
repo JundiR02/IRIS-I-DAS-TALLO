@@ -177,7 +177,7 @@ export default function Lapor() {
             : 'Laporan Anda sudah masuk dan sedang menunggu ulasan Tim Peneliti.'}
         </p>
         <div className="mt-5 rounded-2xl bg-white/10 px-4 py-3 text-[13px]">
-          Anda akan dapat notifikasi begitu peneliti selesai mengecek — biasanya beberapa jam.
+          Anda akan dapat notifikasi begitu peneliti selesai mengecek, biasanya dalam beberapa jam.
         </div>
         <button
           onClick={() => navigate('/')}
@@ -444,7 +444,7 @@ export default function Lapor() {
         {step === 3 && (
           <StepShell
             judul="Rekam catatan suara"
-            sub="Opsional — ceritakan yang Anda lihat (maksimal 10 detik)."
+            sub="Opsional. Ceritakan yang Anda lihat (maksimal 10 detik)."
           >
             <Recorder value={suara} onChange={setSuara} />
             <div className="mt-6 flex gap-2">
@@ -508,7 +508,7 @@ export default function Lapor() {
               <p className="mt-3 rounded-2xl bg-waspada-wash px-3.5 py-2.5 text-[12px] font-semibold text-waspada-ink">
                 {state.offline
                   ? 'Mode offline: foto disimpan di HP dulu, terkirim otomatis saat ada sinyal.'
-                  : 'Foto belum berhasil diunggah ke server — tersimpan di HP dulu, akan dicoba lagi otomatis.'}
+                  : 'Foto belum berhasil diunggah ke server. Foto disimpan di HP dulu dan akan dikirim ulang otomatis.'}
               </p>
             )}
 

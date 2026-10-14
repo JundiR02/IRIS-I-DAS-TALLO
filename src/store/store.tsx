@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Komentar, Laporan, Lang, Notif, Rekomendasi, Status, StatusVerifikasi, Warga } from '../lib/types'
 import { TITIK } from '../data/seed'
+import { STATUS } from '../lib/status'
 import { noUrutHariIni } from '../lib/rotasi'
 import { unggahFotoKeServer } from '../lib/uploadFoto'
 import {
@@ -216,8 +217,8 @@ function cariMe(state: Pick<State, 'auth' | 'direktori'>): Warga {
 
 const JUDUL_REKOMENDASI: Record<Status, string> = {
   aman: 'Kondisi aman',
-  waspada: 'Waspada — siapkan diri',
-  bahaya: 'Bahaya — segera bertindak',
+  waspada: 'Waspada: siapkan diri',
+  bahaya: 'Bahaya: segera bertindak',
 }
 
 /** Rekomendasi = laporan yang sudah diverifikasi peneliti dan diberi teks arahan. */
@@ -252,7 +253,7 @@ function notifDariData(laporan: Laporan[], komentar: Komentar[], saya?: string):
     hasil.push({
       id: `nt-v-${l.id}`,
       jenis: status === 'bahaya' ? 'peringatan' : 'terverifikasi',
-      teks: `Laporan Anda sudah dicek ${l.reviewerNama ?? 'peneliti'} — status ${status.toUpperCase()}${
+      teks: `Laporan Anda sudah dicek ${l.reviewerNama ?? 'peneliti'}: status ${STATUS[status].id}${
         l.statusVerifikasi === 'dikoreksi' ? ' (dikoreksi)' : ''
       }. Lihat arahannya.`,
       waktu: l.waktuReview,
@@ -644,7 +645,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         pernahPeringatkanKuota.current = true
         dispatch({
           type: 'TOAST',
-          teks: 'Penyimpanan HP penuh — laporan terbaru mungkin hilang setelah tutup aplikasi.',
+          teks: 'Penyimpanan HP penuh. Laporan terbaru bisa hilang setelah aplikasi ditutup.',
           nada: 'peringatan',
         })
       }
@@ -863,7 +864,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             .then((hasil) => dispatch({ type: 'KOMENTAR_SERVER_BARU', komentar: enrichKomentar(hasil, state.direktori) }))
             .catch(() => {
               dispatch({ type: 'TAMBAH_KOMENTAR_LOKAL', laporanId, teks, mention })
-              dispatch({ type: 'TOAST', teks: 'Server tak terjangkau — komentar tersimpan lokal saja.', nada: 'peringatan' })
+              dispatch({ type: 'TOAST', teks: 'Server tidak terjangkau. Komentar baru disimpan di HP ini saja.', nada: 'peringatan' })
             })
         },
         toggleSukaLaporan: (id) => {

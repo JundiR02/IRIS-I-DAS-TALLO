@@ -115,7 +115,7 @@ export default function Diskusi() {
             onChange={(e) => setTeks(e.target.value)}
             rows={1}
             placeholder="Tulis komentar…"
-            className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-bone-200 bg-white px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest"
+            className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-garis bg-white px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const INPUT =
-  'w-full rounded-xl border-2 border-bone-200 bg-white px-3.5 py-2.5 text-base text-ink outline-none placeholder:text-ink-faint focus:border-forest'
+  'w-full rounded-xl border-2 border-garis bg-white px-3.5 py-2.5 text-base text-ink outline-none placeholder:text-ink-faint focus:border-forest'
 
 /** Form ganti PIN/kata sandi sendiri — dipakai di Profil (aplikasi) dan Panel. */
 export default function FormGantiSandi({ jenis, kirim, onSelesai }: Props) {
@@ -31,7 +31,7 @@ export default function FormGantiSandi({ jenis, kirim, onSelesai }: Props) {
     if (!lama || !baru) return setError(`Isi ${nama} lama dan ${nama} baru.`)
     if (pin && !/^\d{6,8}$/.test(baru)) return setError('PIN baru harus 6–8 angka.')
     if (!pin && baru.length < 8) return setError('Kata sandi baru minimal 8 karakter.')
-    if (baru !== ulang) return setError(`Ulangi ${nama} baru — keduanya belum sama.`)
+    if (baru !== ulang) return setError(`Ulangi ${nama} baru: keduanya belum sama.`)
     setMemuat(true)
     try {
       await kirim(lama, baru)

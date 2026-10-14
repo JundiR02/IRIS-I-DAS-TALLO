@@ -133,7 +133,7 @@ export default function Beranda() {
             {laporanTerakhirWilayah
               ? dataHariIni
                 ? ` · diperbarui ${waktuRelatif(laporanTerakhirWilayah.waktuUpload)}`
-                : ` · data ${waktuRelatif(laporanTerakhirWilayah.waktuUpload)} — giliran hari ini belum sampai`
+                : ` · data ${waktuRelatif(laporanTerakhirWilayah.waktuUpload)}, giliran hari ini belum sampai`
               : ' · belum pernah ada laporan di titik ini'}
           </p>
         </button>
@@ -149,7 +149,7 @@ export default function Beranda() {
             <TriangleAlert size={20} className="mt-0.5 shrink-0" />
             <div>
               <p className="flex items-center gap-1.5 text-[10px] font-extrabold uppercase tracking-wide text-white/80">
-                <MapPinned size={11} /> Peringatan tetangga — bukan wilayah Anda
+                <MapPinned size={11} /> Peringatan tetangga, bukan wilayah Anda
               </p>
               <p className="mt-0.5 text-sm font-extrabold">
                 Titik {peringatanJarak.titikNama} naik ke BAHAYA
@@ -180,7 +180,7 @@ export default function Beranda() {
                 if (hasil.berhasil > 0) {
                   actions.toast(`${hasil.berhasil} laporan berhasil terkirim`, 'ok')
                 } else if (hasil.gagal > 0) {
-                  actions.toast('Masih belum ada sinyal — coba lagi nanti', 'peringatan')
+                  actions.toast('Masih belum ada sinyal. Coba lagi nanti.', 'peringatan')
                 }
               }}
               className="tap flex items-center gap-1 rounded-pill bg-white px-3 py-1.5 text-xs font-bold text-waspada-ink"

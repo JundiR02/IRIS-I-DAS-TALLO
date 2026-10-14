@@ -53,7 +53,7 @@ export default function TabPengguna() {
     setSibuk(null)
     if (!baru) return
     setAkun((xs) => xs.map((x) => (x.id === baru.id ? baru : x)))
-    beriNotif(baru.aktif ? `${baru.nama} diaktifkan lagi.` : `${baru.nama} dinonaktifkan — sesinya langsung berakhir.`)
+    beriNotif(baru.aktif ? `${baru.nama} diaktifkan lagi.` : `${baru.nama} dinonaktifkan. Sesinya langsung berakhir.`)
     void muatUlang()
   }
 
@@ -105,9 +105,9 @@ export default function TabPengguna() {
               >
                 {t.label}{' '}
                 {t.v === 'pendaftar' && n > 0 ? (
-                  <span className="rounded-pill bg-waspada px-1.5 text-white">{n}</span>
+                  <span className="rounded-pill bg-waspada px-1.5 text-ink">{n}</span>
                 ) : (
-                  <span className="text-ink-faint">{n}</span>
+                  <span className="text-ink-muted">{n}</span>
                 )}
               </button>
             )
@@ -134,7 +134,7 @@ export default function TabPengguna() {
             <>
               {' '}
               Belum ada responden untuk hari ke-{nomorKosong.slice(0, 12).join(', ')}
-              {nomorKosong.length > 12 ? ', …' : ''} — hari itu tidak ada yang melapor.
+              {nomorKosong.length > 12 ? ', …' : ''}. Pada hari itu tidak ada yang melapor.
             </>
           )}
         </p>
@@ -171,12 +171,12 @@ export default function TabPengguna() {
                     </div>
                   </td>
                   <td data-label="Login" className="font-mono text-[12.5px] before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden before:font-sans md:px-3 md:py-2.5">
-                    {a.peran === 'warga' ? `no. ${a.noUrut}` : a.username ?? '—'}
+                    {a.peran === 'warga' ? `no. ${a.noUrut}` : a.username ?? 'Belum ada'}
                     {a.peran === 'warga' && a.username && <span className="block text-[11px] text-ink-faint">{a.username}</span>}
                   </td>
                   <td data-label={tab === 'warga' ? 'Titik pantau' : tab === 'pendaftar' ? 'Ingin sebagai' : 'Unit'} className="text-[12.5px] before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden md:px-3 md:py-2.5">
                     {a.peran === 'warga'
-                      ? `${titikById(a.titikId ?? '')?.nama ?? '—'} · ${a.kelurahan}`
+                      ? `${titikById(a.titikId ?? '')?.nama ?? 'Belum ada titik'} · ${a.kelurahan}`
                       : a.peran === 'pendaftar'
                         ? `${labelPeran(a.peranDiminta)}${a.kelurahan && a.kelurahan !== '-' ? ` · ${a.kelurahan}` : ''}`
                         : a.kelurahan}
@@ -265,8 +265,8 @@ export default function TabPengguna() {
           <p className="text-sm text-ink-soft">
             {reset.id === sesi?.akun.id ? (
               <>
-                Kata sandi baru akan dibuat untuk akun <b>Anda sendiri</b> dan hanya ditampilkan sekali —{' '}
-                <b>catat sebelum menutup jendelanya</b>. Kata sandi lama langsung tidak berlaku.
+                Kata sandi baru akan dibuat untuk akun <b>Anda sendiri</b> dan hanya ditampilkan sekali.{' '}
+                <b>Catat sebelum menutup jendelanya</b>. Kata sandi lama langsung tidak berlaku.
               </>
             ) : (
               <>
@@ -384,7 +384,7 @@ function FormAkun({
             <p className={LABEL}>
               {menyetujui ? 'Tetapkan peran' : 'Peran'}
               {menyetujui && awal?.peranDiminta && (
-                <span className="font-normal text-ink-faint"> — pendaftar memilih: {labelPeran(awal.peranDiminta)}</span>
+                <span className="font-normal text-ink-faint"> (pendaftar memilih: {labelPeran(awal.peranDiminta)})</span>
               )}
             </p>
             <div className="grid grid-cols-3 gap-1 rounded-pill bg-bone-200 p-1">
@@ -526,7 +526,7 @@ function TampilKredensial({ k, onTutup }: { k: Kredensial; onTutup: () => void }
   const [tersalin, setTersalin] = useState(false)
   const warga = k.akun.peran === 'warga'
   const login = warga ? `Nomor urut: ${k.akun.noUrut}` : `Username: ${k.akun.username}`
-  const teksSalin = `IRIS-I — ${k.akun.nama}\n${login}\n${warga ? 'PIN' : 'Kata sandi'}: ${k.rahasia}`
+  const teksSalin = `IRIS-I: ${k.akun.nama}\n${login}\n${warga ? 'PIN' : 'Kata sandi'}: ${k.rahasia}`
 
   const salin = async () => {
     try {
@@ -555,7 +555,7 @@ function TampilKredensial({ k, onTutup }: { k: Kredensial; onTutup: () => void }
       </dl>
       <p className="mt-3 flex gap-2 rounded-xl bg-waspada-wash px-3 py-2 text-[12.5px] text-waspada-ink">
         <TriangleAlert size={15} className="mt-0.5 shrink-0" />
-        Catat atau salin sekarang — {warga ? 'PIN' : 'kata sandi'} ini tidak bisa dilihat lagi. Kalau lupa, gunakan Reset.
+        Catat atau salin sekarang. {warga ? 'PIN' : 'Kata sandi'} ini tidak bisa dilihat lagi. Kalau lupa, gunakan Reset.
         Berikan langsung ke {warga ? 'responden' : 'pemilik akun'}, jangan lewat grup.
       </p>
       <div className="mt-5 flex justify-end gap-2">
