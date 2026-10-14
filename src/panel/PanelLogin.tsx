@@ -56,7 +56,7 @@ export default function PanelLogin() {
                 setPeran(v)
                 setError(null)
               }}
-              className={`flex items-center justify-center gap-1.5 rounded-pill py-2 text-sm font-extrabold ${
+              className={`flex min-h-11 items-center justify-center gap-1.5 rounded-pill py-2 text-sm font-extrabold ${
                 peran === v ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
               }`}
             >
@@ -108,7 +108,7 @@ export default function PanelLogin() {
           </button>
         </form>
 
-        <a href="#/" className="mt-5 inline-flex items-center gap-1 text-[12px] font-bold text-ink-muted hover:text-ink">
+        <a href="#/" className="tap mt-5 inline-flex items-center gap-1 text-[12px] font-bold text-ink-muted hover:text-ink">
           <ArrowLeft size={13} /> Ke aplikasi warga
         </a>
       </div>

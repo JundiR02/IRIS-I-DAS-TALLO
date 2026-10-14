@@ -73,10 +73,14 @@ export default function App() {
 
   // HP sungguhan: penuh layar, tanpa bingkai/status-bar palsu — HP-nya sendiri
   // sudah punya itu. Ini yang dipakai warga sehari-hari.
+  // Di HP lebar / tablet, kolom aplikasi dibatasi lebarnya supaya kartu &
+  // navigasi bawah tidak melar selebar layar.
   if (isMobile) {
     return (
-      <div className="relative flex h-[100dvh] w-full flex-col overflow-hidden bg-bone-50">
-        {konten}
+      <div className="flex h-[100dvh] w-full justify-center">
+        <div className="relative flex h-full w-full max-w-[560px] flex-col overflow-hidden bg-bone-50 min-[561px]:shadow-lift">
+          {konten}
+        </div>
       </div>
     )
   }

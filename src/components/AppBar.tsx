@@ -23,7 +23,7 @@ export default function AppBar({ title, left, right, showBack, onBack, border = 
         <button
           onClick={() => (onBack ? onBack() : navigate(-1))}
           aria-label="Kembali"
-          className="-ml-1.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-bone-200 text-ink-soft active:scale-95"
+          className="tap -ml-1.5 grid h-9 w-9 shrink-0 place-items-center rounded-full bg-bone-200 text-ink-soft active:scale-95"
         >
           <ChevronLeft size={20} />
         </button>

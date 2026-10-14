@@ -69,7 +69,7 @@ export default function TabLaporan() {
             <button
               key={f.v}
               onClick={() => setParams(f.v === 'menunggu' ? {} : { filter: f.v })}
-              className={`rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
+              className={`tap rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
                 filter === f.v ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
               }`}
             >
@@ -99,7 +99,7 @@ export default function TabLaporan() {
 
       <div className="mt-4 space-y-2.5">
         {daftar.length === 0 && (
-          <Kosong>{filter === 'menunggu' ? 'Semua laporan sudah diverifikasi. 🎉' : 'Tidak ada laporan yang cocok.'}</Kosong>
+          <Kosong>{filter === 'menunggu' ? 'Semua laporan sudah diverifikasi.' : 'Tidak ada laporan yang cocok.'}</Kosong>
         )}
         {daftar.map((l) => {
           const p = profil(l.wargaId)

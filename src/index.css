@@ -19,12 +19,9 @@ body,
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  /* Stage behind the phone — subtle basin texture */
-  background:
-    radial-gradient(1100px 600px at 20% -10%, #dfeadf 0%, transparent 60%),
-    radial-gradient(900px 700px at 110% 20%, #e8ecdd 0%, transparent 55%),
-    #e7e3d7;
-  color: #1b2a22;
+  /* Latar di belakang bingkai HP / kolom aplikasi — kapur, sedikit lebih gelap dari layar */
+  background: #E4E2DD;
+  color: #262626;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -36,6 +33,23 @@ body {
 }
 .app-scroll::-webkit-scrollbar {
   display: none;
+}
+
+/* Area sentuh minimal 44×44px untuk kontrol yang tampilannya lebih kecil
+   (tombol ikon, segmented, chip) — ukuran visual tetap, jempol tetap kena. */
+@layer utilities {
+  .tap {
+    position: relative;
+  }
+  .tap::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
 }
 
 /* Screen enter transition used by the router outlet */

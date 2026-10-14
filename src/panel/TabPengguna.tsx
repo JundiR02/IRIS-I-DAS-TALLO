@@ -99,7 +99,7 @@ export default function TabPengguna() {
               <button
                 key={t.v}
                 onClick={() => setTab(t.v)}
-                className={`rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
+                className={`tap rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
                   tab === t.v ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
                 }`}
               >
@@ -113,9 +113,9 @@ export default function TabPengguna() {
             )
           })}
         </div>
-        <label className="relative">
+        <label className="relative w-full sm:w-auto">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-          <input value={cari} onChange={(e) => setCari(e.target.value)} placeholder="Cari nama / no. / username" className={`${INPUT} w-60 py-1.5 pl-8`} />
+          <input value={cari} onChange={(e) => setCari(e.target.value)} placeholder="Cari nama / no. / username" className={`${INPUT} min-h-11 w-full py-1.5 pl-8 sm:w-60`} />
         </label>
       </div>
 
@@ -140,12 +140,14 @@ export default function TabPengguna() {
         </p>
       )}
 
-      <div className="mt-4 overflow-x-auto rounded-card bg-white shadow-soft">
+      {/* md ke atas: tabel. Di bawahnya tiap baris jadi kartu bertumpuk (label
+          kolom dari data-label), supaya tombol Aksi tidak tersembunyi di gulir samping. */}
+      <div className="mt-4 rounded-card bg-white shadow-soft md:overflow-x-auto">
         {daftar.length === 0 ? (
           <Kosong>{tab === 'pendaftar' ? 'Tidak ada pendaftar yang menunggu.' : 'Belum ada akun di sini.'}</Kosong>
         ) : (
-          <table className="w-full min-w-[720px] text-left text-sm">
-            <thead className="border-b border-bone-200 text-[12px] text-ink-muted">
+          <table className="block w-full text-left text-sm md:table md:min-w-[720px]">
+            <thead className="hidden border-b border-bone-200 text-[12px] text-ink-muted md:table-header-group">
               <tr>
                 <th className="px-4 py-3 font-bold">Nama</th>
                 <th className="px-3 py-3 font-bold">Login</th>
@@ -155,28 +157,31 @@ export default function TabPengguna() {
                 <th className="px-4 py-3 text-right font-bold">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-bone-100">
+            <tbody className="block divide-y divide-bone-100 md:table-row-group">
               {daftar.map((a) => (
-                <tr key={a.id} className={a.aktif ? '' : 'bg-bone-50 text-ink-faint'}>
-                  <td className="px-4 py-2.5">
+                <tr
+                  key={a.id}
+                  className={`grid grid-cols-2 gap-x-3 gap-y-2 px-4 py-3 md:table-row md:p-0 ${a.aktif ? '' : 'bg-bone-50 text-ink-faint'}`}
+                >
+                  <td className="col-span-2 md:px-4 md:py-2.5">
                     <div className="flex items-center gap-2.5">
                       <Avatar nama={a.nama} inisial={a.inisial} warna={a.aktif ? a.warna : '#9CA599'} foto={a.fotoUrl} size={32} />
                       <span className="font-bold text-ink">{a.nama}</span>
                       {a.id === sesi?.akun.id && <span className="text-[11px] text-ink-faint">(Anda)</span>}
                     </div>
                   </td>
-                  <td className="px-3 py-2.5 font-mono text-[12.5px]">
+                  <td data-label="Login" className="font-mono text-[12.5px] before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden before:font-sans md:px-3 md:py-2.5">
                     {a.peran === 'warga' ? `no. ${a.noUrut}` : a.username ?? '—'}
                     {a.peran === 'warga' && a.username && <span className="block text-[11px] text-ink-faint">{a.username}</span>}
                   </td>
-                  <td className="px-3 py-2.5 text-[12.5px]">
+                  <td data-label={tab === 'warga' ? 'Titik pantau' : tab === 'pendaftar' ? 'Ingin sebagai' : 'Unit'} className="text-[12.5px] before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden md:px-3 md:py-2.5">
                     {a.peran === 'warga'
                       ? `${titikById(a.titikId ?? '')?.nama ?? '—'} · ${a.kelurahan}`
                       : a.peran === 'pendaftar'
                         ? `${labelPeran(a.peranDiminta)}${a.kelurahan && a.kelurahan !== '-' ? ` · ${a.kelurahan}` : ''}`
                         : a.kelurahan}
                   </td>
-                  <td className="px-3 py-2.5">
+                  <td data-label="Status" className="before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden md:px-3 md:py-2.5">
                     {a.peran === 'pendaftar' ? (
                       <span className="rounded-pill bg-waspada-wash px-2 py-0.5 text-[11px] font-bold text-waspada-ink">Menunggu</span>
                     ) : a.aktif ? (
@@ -185,12 +190,12 @@ export default function TabPengguna() {
                       <span className="rounded-pill bg-bone-200 px-2 py-0.5 text-[11px] font-bold text-ink-muted">Nonaktif</span>
                     )}
                   </td>
-                  <td className="px-3 py-2.5 text-[12.5px]">
+                  <td data-label={tab === 'pendaftar' ? 'Mendaftar' : 'Login terakhir'} className="text-[12.5px] before:block before:text-[11px] before:font-bold before:text-ink-muted before:content-[attr(data-label)] md:before:hidden md:px-3 md:py-2.5">
                     {a.peran === 'pendaftar' ? tanggalJam(a.dibuat) : a.loginTerakhir ? tanggalJam(a.loginTerakhir) : 'Belum pernah'}
                   </td>
-                  <td className="px-4 py-2.5">
+                  <td className="col-span-2 pt-1 md:px-4 md:py-2.5">
                     {a.peran === 'pendaftar' ? (
-                      <div className="flex justify-end gap-1.5">
+                      <div className="flex flex-wrap gap-2 md:justify-end md:gap-1.5">
                         <button onClick={() => setForm({ mode: 'ubah', akun: a })} className={`${BTN.kecil} bg-forest text-white hover:bg-forest-deep`}>
                           <UserCheck size={12} /> Setujui
                         </button>
@@ -199,7 +204,7 @@ export default function TabPengguna() {
                         </button>
                       </div>
                     ) : (
-                    <div className="flex justify-end gap-1.5">
+                    <div className="flex flex-wrap gap-2 md:justify-end md:gap-1.5">
                       <button onClick={() => setForm({ mode: 'ubah', akun: a })} className={BTN.kecil} title="Ubah data">
                         <PencilLine size={12} /> Ubah
                       </button>

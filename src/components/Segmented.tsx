@@ -12,7 +12,7 @@ export default function Segmented<T extends string>({ options, value, onChange, 
         <button
           key={o.value}
           onClick={() => onChange(o.value)}
-          className={`rounded-pill px-3.5 py-1.5 text-xs font-bold transition-colors ${
+          className={`tap rounded-pill px-3.5 py-1.5 text-xs font-bold transition-colors ${
             value === o.value ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
           }`}
         >

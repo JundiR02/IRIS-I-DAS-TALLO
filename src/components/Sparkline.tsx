@@ -11,7 +11,7 @@ export default function Sparkline({
   values,
   width = 120,
   height = 40,
-  stroke = '#2F5D3A',
+  stroke = '#303030',
   fill = 'rgba(47,93,58,0.12)',
   className,
 }: Props) {

@@ -29,7 +29,7 @@ function PilihJenis({ nilai, ubah, label }: { nilai: Jenis; ubah: (j: Jenis) => 
           role="tab"
           aria-selected={nilai === v}
           onClick={() => ubah(v)}
-          className={`flex items-center justify-center gap-1.5 rounded-pill py-2.5 text-sm font-extrabold transition-colors ${
+          className={`flex min-h-11 items-center justify-center gap-1.5 rounded-pill py-2.5 text-sm font-extrabold transition-colors ${
             nilai === v ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
           }`}
         >
@@ -127,7 +127,7 @@ function FormMasuk({ keDaftar }: { keDaftar: () => void }) {
         <button
           type="submit"
           disabled={memuat}
-          className="flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white shadow-fab active:scale-[0.98] disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
         >
           <LogIn size={18} /> {memuat ? 'Memeriksa…' : 'Masuk'}
         </button>
@@ -258,7 +258,7 @@ function FormDaftar({ keMasuk }: { keMasuk: () => void }) {
         <button
           type="submit"
           disabled={memuat}
-          className="flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white shadow-fab active:scale-[0.98] disabled:opacity-60"
+          className="flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white active:scale-[0.98] disabled:opacity-60"
         >
           <UserPlus size={18} /> {memuat ? 'Mendaftarkan…' : 'Daftar'}
         </button>

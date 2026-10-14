@@ -18,10 +18,11 @@ export function useMediaQuery(query: string): boolean {
 }
 
 /**
- * true di HP sungguhan (layar sempit). Di bawah breakpoint ini aplikasi
- * tampil penuh-layar seperti web-app biasa; di atasnya (tablet/desktop
- * peninjau) dibungkus mock-up bingkai HP + Panel Demo untuk kebutuhan review.
+ * true di perangkat warga sungguhan: layar sempit, ATAU layar sentuh (tablet)
+ * berapa pun lebarnya — warga dengan tablet tidak boleh melihat bingkai HP &
+ * status-bar palsu. Mock-up bingkai HP + Panel Demo hanya untuk peninjau di
+ * layar lebar bermouse.
  */
 export function useIsMobile(): boolean {
-  return useMediaQuery('(max-width: 767px)')
+  return useMediaQuery('(max-width: 767px), (pointer: coarse)')
 }

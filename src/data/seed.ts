@@ -345,7 +345,7 @@ export const NOTIF: Notif[] = [
   {
     id: 'nt-01',
     jenis: 'peringatan',
-    teks: '⚠️ Titik Bitowa naik ke BAHAYA. Warga sekitar Pampang & Tello, amankan barang berharga malam ini.',
+    teks: 'Titik Bitowa naik ke BAHAYA. Warga sekitar Pampang & Tello, amankan barang berharga malam ini.',
     waktu: M(9),
     dibaca: false,
     laporanId: 'lp-101',
@@ -353,7 +353,7 @@ export const NOTIF: Notif[] = [
   {
     id: 'nt-02',
     jenis: 'terverifikasi',
-    teks: 'Laporan Anda 24 jam lalu sudah dicek Tim Peneliti ✅. Ada rekomendasi baru untuk Anda.',
+    teks: 'Laporan Anda 24 jam lalu sudah dicek Tim Peneliti. Ada rekomendasi baru untuk Anda.',
     waktu: H(24),
     dibaca: false,
     laporanId: 'lp-096',
@@ -361,7 +361,7 @@ export const NOTIF: Notif[] = [
   {
     id: 'nt-03',
     jenis: 'giliran',
-    teks: 'Besok giliran Anda melapor 🙋. Siapkan foto sungai dari sisi jembatan Pampang pagi hari.',
+    teks: 'Besok giliran Anda melapor. Siapkan foto sungai dari sisi jembatan Pampang pagi hari.',
     waktu: H(20),
     dibaca: true,
   },
@@ -376,7 +376,7 @@ export const NOTIF: Notif[] = [
   {
     id: 'nt-05',
     jenis: 'poin',
-    teks: 'Anda mendapat lencana baru: Sigap 3 Hari 🏅 (+50 poin).',
+    teks: 'Anda mendapat lencana baru: Sigap 3 Hari (+50 poin).',
     waktu: H(70),
     dibaca: true,
   },

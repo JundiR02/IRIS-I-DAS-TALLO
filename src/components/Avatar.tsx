@@ -1,3 +1,5 @@
+import { Check } from 'lucide-react'
+
 interface Props {
   nama: string
   inisial: string
@@ -26,10 +28,10 @@ export default function Avatar({ nama, inisial, warna, size = 40, peneliti, foto
       {foto ? <img src={foto} alt="" className="h-full w-full rounded-full object-cover" /> : inisial}
       {peneliti && (
         <span
-          className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-forest text-[9px] text-white ring-2 ring-white"
+          className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center rounded-full bg-forest text-white ring-2 ring-white"
           style={{ width: size * 0.42, height: size * 0.42 }}
         >
-          ✓
+          <Check size={size * 0.28} strokeWidth={3.5} aria-hidden />
         </span>
       )}
     </span>

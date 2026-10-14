@@ -348,10 +348,29 @@ worker-upload/                 Proyek terpisah: backend Cloudflare (Worker + D1 
 
 ### Sistem desain (`tailwind.config.js`)
 
-Palet earth/eco dari `refDesign/`: kertas hangat (`bone`), hijau hutan (`forest`),
-aksen *lime*, biru air (`river`), dan status `aman` / `waspada` / `bahaya`
-(masing-masing `DEFAULT` / `ink` / `wash`). Radius besar (`card` 24px, `pill`),
-bayangan lembut, font **Plus Jakarta Sans** (fallback system-ui).
+Keputusan visual dan alasannya:
+
+- **Palet = warna logo.** Arang `#303030` (tombol utama, sidebar; token `forest`)
+  dan kapur `#F2F1EE` plus tingkatan abu hangatnya (latar & kartu; token `bone`,
+  `ink`, `river`), dengan **mustard** `#C7AE4C` (`lime`) sebagai satu-satunya
+  aksen: tombol Lapor & poin. Nama token lama dipertahankan supaya komponen
+  tidak perlu disentuh satu per satu.
+- **Status `aman` / `waspada` / `bahaya` tetap hijau–kuning–merah** (masing-
+  masing `DEFAULT` / `ink` / `wash`): ini sistem lampu lalu lintas (prinsip #2),
+  bukan warna dekorasi.
+- **Logo** punya dua varian: `<Logo />` ubin arang untuk latar terang,
+  `<Logo tema="terang" />` ubin kapur untuk latar gelap.
+- **Bayangan hanya untuk yang melayang** (navigasi bawah, kartu di atas peta,
+  sheet, modal, toast: `shadow-lift` / `shadow-fab`). Kartu di alur halaman
+  rata dengan garis tepi tipis (`shadow-card` / `shadow-soft`).
+- **Ikon: satu set Lucide garis tipis**, dipilih per arti (kamera, peta, sirene…),
+  karena garis tipisnya senada dengan garis sungai di logo. Tidak ada emoji di
+  UI; jenis pesan toast (`ok` / `peringatan` / `info`) digambar sebagai ikon.
+- **Gerak:** hanya untuk keadaan nyata (denyut tombol Lapor 3× saat hari
+  giliran, garis sungai tergambar di layar pembuka), dan mati saat
+  `prefers-reduced-motion`.
+- Radius besar (`card` 24px, `pill`), font **Plus Jakarta Sans** untuk teks dan
+  **Montserrat** khusus wordmark.
 
 ---
 

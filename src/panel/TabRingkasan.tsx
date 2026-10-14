@@ -41,7 +41,7 @@ export default function TabRingkasan() {
       {darurat.length > 0 && (
         <button
           onClick={() => navigate('/panel/laporan?filter=darurat')}
-          className="flex w-full items-center gap-3 rounded-card bg-bahaya px-5 py-4 text-left text-white shadow-lift"
+          className="flex w-full items-center gap-3 rounded-card bg-bahaya px-5 py-4 text-left text-white"
         >
           <Siren size={22} />
           <span className="flex-1">

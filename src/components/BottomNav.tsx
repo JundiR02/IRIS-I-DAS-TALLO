@@ -19,15 +19,15 @@ export default function BottomNav() {
     if (!giliranHariIni) {
       actions.toast(
         `Giliran Anda: ${tanggalGiliran(state.hariKe, me.noUrut)} — atau pakai Lapor Darurat`,
-        '🗓️',
+        'info',
       )
     }
     navigate('/lapor')
   }
 
   return (
-    <nav className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-4 pb-3">
-      <div className="pointer-events-auto relative mx-auto flex items-end justify-between rounded-[26px] bg-white/95 px-3 py-2 shadow-card backdrop-blur">
+    <nav className="pointer-events-none absolute inset-x-0 bottom-0 z-30 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+      <div className="pointer-events-auto relative mx-auto flex items-end justify-between rounded-[26px] bg-white/95 px-3 py-2 shadow-lift backdrop-blur">
         {TABS.slice(0, 2).map(({ to, label, Icon, end }) => (
           <Tab key={to} to={to} label={label} Icon={Icon} end={end} />
         ))}
@@ -42,7 +42,7 @@ export default function BottomNav() {
             }`}
           >
             {giliranHariIni && (
-              <span className="absolute inset-0 -z-10 rounded-full bg-lime/60 animate-pulse-ring" />
+              <span className="absolute inset-0 -z-10 rounded-full bg-lime/60 motion-safe:animate-pulse-ring" />
             )}
             <Plus size={26} strokeWidth={3} />
           </button>

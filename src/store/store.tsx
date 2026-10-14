@@ -40,6 +40,9 @@ import {
 
 const STORAGE_KEY = 'iris-i-tallo.v1'
 
+/** Jenis pesan toast — digambar sebagai ikon di Toast.tsx (bukan emoji). */
+export type NadaToast = 'ok' | 'peringatan' | 'info'
+
 export interface SesiWarga {
   id: string
   noUrut: number
@@ -78,7 +81,7 @@ interface State extends Persisted {
   rekomendasi: Rekomendasi[]
   notif: Notif[]
   memuatData: boolean
-  toast: { id: number; teks: string; ikon?: string } | null
+  toast: { id: number; teks: string; nada?: NadaToast } | null
 }
 
 const DEFAULT_PERSISTED: Persisted = {
@@ -349,7 +352,7 @@ type Action =
   | { type: 'SET_KAMERA_DITOLAK'; ditolak: boolean }
   | { type: 'SET_HARI'; hariKe: number }
   | { type: 'SELESAI_ONBOARDING' }
-  | { type: 'TOAST'; teks: string; ikon?: string }
+  | { type: 'TOAST'; teks: string; nada?: NadaToast }
   | { type: 'TUTUP_TOAST' }
   | { type: 'RESET' }
 
@@ -529,7 +532,7 @@ function reducer(state: State, action: Action): State {
     case 'SELESAI_ONBOARDING':
       return { ...state, onboardingSelesai: true }
     case 'TOAST':
-      return { ...state, toast: { id: Date.now(), teks: action.teks, ikon: action.ikon } }
+      return { ...state, toast: { id: Date.now(), teks: action.teks, nada: action.nada } }
     case 'TUTUP_TOAST':
       return { ...state, toast: null }
     case 'RESET':
@@ -586,7 +589,7 @@ interface StoreValue {
     setKameraDitolak: (ditolak: boolean) => void
     setHari: (hariKe: number) => void
     selesaiOnboarding: () => void
-    toast: (teks: string, ikon?: string) => void
+    toast: (teks: string, nada?: NadaToast) => void
     tutupToast: () => void
     reset: () => void
   }
@@ -626,7 +629,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         dispatch({
           type: 'TOAST',
           teks: 'Penyimpanan HP penuh — laporan terbaru mungkin hilang setelah tutup aplikasi.',
-          ikon: '⚠️',
+          nada: 'peringatan',
         })
       }
     }
@@ -652,7 +655,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
       .catch((e) => {
       if (batal || !(e instanceof ApiError) || (e.status !== 401 && e.status !== 403)) return
       dispatch({ type: 'LOGOUT' })
-      dispatch({ type: 'TOAST', teks: 'Sesi Anda berakhir. Silakan masuk lagi.', ikon: '🔒' })
+      dispatch({ type: 'TOAST', teks: 'Sesi Anda berakhir. Silakan masuk lagi.', nada: 'peringatan' })
     })
     Promise.all([ambilLaporan(), ambilKomentar(), ambilDirektori().catch(() => null)])
       .then(([apiLaporan, apiKomentar, apiDirektori]) => {
@@ -669,7 +672,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         if (batal) return
         // Matikan indikator muat tanpa mengganti data — tetap pakai data lama/seed.
         dispatch({ type: 'DATA_SERVER_DIMUAT', laporan: state.laporanServer, komentar: state.komentarServer })
-        dispatch({ type: 'TOAST', teks: 'Gagal memuat data terbaru — menampilkan data tersimpan.', ikon: '⚠️' })
+        dispatch({ type: 'TOAST', teks: 'Gagal memuat data terbaru — menampilkan data tersimpan.', nada: 'peringatan' })
       })
     return () => {
       batal = true
@@ -845,7 +848,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
             .then((hasil) => dispatch({ type: 'KOMENTAR_SERVER_BARU', komentar: enrichKomentar(hasil, state.direktori) }))
             .catch(() => {
               dispatch({ type: 'TAMBAH_KOMENTAR_LOKAL', laporanId, teks, mention })
-              dispatch({ type: 'TOAST', teks: 'Server tak terjangkau — komentar tersimpan lokal saja.', ikon: '⚠️' })
+              dispatch({ type: 'TOAST', teks: 'Server tak terjangkau — komentar tersimpan lokal saja.', nada: 'peringatan' })
             })
         },
         toggleSukaLaporan: (id) => {
@@ -866,7 +869,7 @@ export function AppStoreProvider({ children }: { children: ReactNode }) {
         setKameraDitolak: (ditolak) => dispatch({ type: 'SET_KAMERA_DITOLAK', ditolak }),
         setHari: (hariKe) => dispatch({ type: 'SET_HARI', hariKe }),
         selesaiOnboarding: () => dispatch({ type: 'SELESAI_ONBOARDING' }),
-        toast: (teks, ikon) => dispatch({ type: 'TOAST', teks, ikon }),
+        toast: (teks, nada) => dispatch({ type: 'TOAST', teks, nada }),
         tutupToast: () => dispatch({ type: 'TUTUP_TOAST' }),
         reset: () => dispatch({ type: 'RESET' }),
       },

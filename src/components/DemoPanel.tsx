@@ -45,7 +45,7 @@ export default function DemoPanel() {
     try {
       await actions.loginMasyarakat(String(akun.noUrut), akun.rahasia)
     } catch {
-      actions.toast('Gagal masuk — periksa apakah kredensial demo masih sesuai di database.', '⚠️')
+      actions.toast('Gagal masuk — periksa apakah kredensial demo masih sesuai di database.', 'peringatan')
     } finally {
       setMasukMemuat(null)
     }

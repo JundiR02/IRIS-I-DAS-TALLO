@@ -4,6 +4,7 @@ import { Camera, CircleDot, Send, ShieldCheck, Gift, Users } from 'lucide-react'
 import { useApp } from '../store/store'
 import Logo from '../components/Logo'
 import RiverScene from '../components/RiverScene'
+import LayarPembuka from '../components/LayarPembuka'
 
 const SLIDES = [
   {
@@ -32,6 +33,7 @@ const SLIDES = [
 export default function Onboarding() {
   const navigate = useNavigate()
   const { actions } = useApp()
+  const [pembuka, setPembuka] = useState(true)
   const [i, setI] = useState(0)
   const last = i === SLIDES.length - 1
   const s = SLIDES[i]
@@ -41,11 +43,13 @@ export default function Onboarding() {
     navigate('/', { replace: true })
   }
 
+  if (pembuka) return <LayarPembuka onMulai={() => setPembuka(false)} />
+
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-bone-50">
       <div className="flex items-center justify-between px-5 pt-4">
         <Logo size={26} />
-        <button onClick={selesai} className="text-xs font-bold text-ink-muted">
+        <button onClick={selesai} className="tap text-xs font-bold text-ink-muted">
           Lewati
         </button>
       </div>
@@ -113,7 +117,7 @@ export default function Onboarding() {
         </div>
         <button
           onClick={() => (last ? selesai() : setI(i + 1))}
-          className="w-full rounded-pill bg-forest py-4 text-base font-extrabold text-white shadow-fab active:scale-[0.98]"
+          className="w-full rounded-pill bg-forest py-4 text-base font-extrabold text-white active:scale-[0.98]"
         >
           {last ? 'Mulai pakai IRIS-I' : 'Lanjut'}
         </button>

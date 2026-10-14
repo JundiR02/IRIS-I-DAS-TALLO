@@ -85,9 +85,9 @@ export default function Rekomendasi() {
                 <button
                   onClick={() => {
                     actions.tindakArahan(r.id)
-                    if (!r.ditindak) actions.toast('Ditandai sudah dilakukan', '✅')
+                    if (!r.ditindak) actions.toast('Ditandai sudah dilakukan', 'ok')
                   }}
-                  className={`flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold ${
+                  className={`tap flex items-center gap-1.5 rounded-pill px-3 py-1.5 text-xs font-bold ${
                     r.ditindak ? 'bg-aman-wash text-aman-ink' : 'bg-forest text-white'
                   }`}
                 >

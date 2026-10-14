@@ -23,12 +23,13 @@ const WARNA_STATUS: Record<Status, string> = {
 }
 
 const W = 320
-const HGT = 520
+const HGT = 560
 
 // Titik pada alur sungai untuk parameter t (0=hulu .. 1=muara).
-// Sisakan ruang aman di atas (kontrol/legenda) dan bawah (bottom-nav).
+// Sisakan ruang aman di atas (kontrol/legenda) dan bawah (kartu ringkasan +
+// bottom-nav), supaya pin hilir tidak tertutup.
 const PAD_ATAS = 112
-const PAD_BAWAH = 96
+const PAD_BAWAH = 150
 function riverXY(t: number): [number, number] {
   const x = W / 2 + Math.sin(t * Math.PI * 2.6 + 0.3) * 60
   const y = PAD_ATAS + t * (HGT - PAD_ATAS - PAD_BAWAH)
@@ -90,7 +91,7 @@ export default function Peta() {
               { value: 'kemarin', label: 'Kemarin' },
             ]}
           />
-          <div className="flex items-center gap-3 rounded-pill bg-white/95 px-3 py-1.5 text-[11px] font-bold shadow-soft">
+          <div className="flex items-center gap-3 rounded-pill bg-white/95 px-3 py-1.5 text-[11px] font-bold shadow-lift">
             {(['aman', 'waspada', 'bahaya'] as Status[]).map((s) => (
               <span key={s} className="flex items-center gap-1.5">
                 <span
@@ -105,15 +106,21 @@ export default function Peta() {
         </div>
 
         {/* Peta SVG sederhana */}
-        <svg viewBox={`0 0 ${W} ${HGT}`} className="h-full w-full" preserveAspectRatio="xMidYMid slice">
+        {/* "meet" (bukan "slice") supaya label titik di tepi tidak terpotong di
+            layar sempit; daratan digambar melebihi viewBox untuk mengisi sisa ruang. */}
+        <svg
+          viewBox={`0 0 ${W} ${HGT}`}
+          className="h-full w-full overflow-visible"
+          preserveAspectRatio="xMidYMid meet"
+        >
           <defs>
-            <linearGradient id="land" x1="0" y1="0" x2="0" y2="1">
+            <linearGradient id="land" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2={HGT}>
               <stop offset="0%" stopColor="#D9E4C7" />
               <stop offset="55%" stopColor="#E7E7D6" />
               <stop offset="100%" stopColor="#E3DEC9" />
             </linearGradient>
           </defs>
-          <rect width={W} height={HGT} fill="url(#land)" />
+          <rect x={-W * 2} y={-HGT} width={W * 5} height={HGT * 3} fill="url(#land)" />
 
           {/* Hutan / kebun di hulu */}
           {Array.from({ length: 46 }).map((_, i) => {
@@ -171,7 +178,7 @@ export default function Peta() {
                 className="cursor-pointer"
               >
                 {naik && <circle r="17" fill={c} opacity={0.25} />}
-                {meHere && <circle r="13" fill="none" stroke="#12291F" strokeWidth="2" />}
+                {meHere && <circle r="13" fill="none" stroke="#303030" strokeWidth="2" />}
                 <circle r="9" fill={c} stroke="#fff" strokeWidth="2.5" />
                 {/* Tanda bentuk per status — gelombang tenang/naik/meluap, bukan cuma warna */}
                 <g
@@ -204,7 +211,7 @@ export default function Peta() {
                   x={d.titik.offset >= 0 ? 15 : -15}
                   y="4"
                   textAnchor={d.titik.offset >= 0 ? 'start' : 'end'}
-                  fontSize="9.5"
+                  fontSize="11.5"
                   fontWeight={meHere ? 800 : 600}
                   fill="#2A362E"
                 >
@@ -216,8 +223,8 @@ export default function Peta() {
         </svg>
 
         {/* Ringkasan bawah */}
-        <div className="absolute inset-x-0 bottom-3 z-10 px-4">
-          <div className="flex items-center gap-3 rounded-card bg-white/95 px-4 py-3 shadow-card backdrop-blur">
+        <div className="absolute inset-x-0 bottom-[96px] z-10 px-4">
+          <div className="flex items-center gap-3 rounded-card bg-white/95 px-4 py-3 shadow-lift backdrop-blur">
             <Navigation size={16} className="text-forest" />
             <p className="flex-1 text-[12px] font-semibold text-ink-soft">
               {dataTitik.filter((d) => d.statusIni === 'bahaya').length} titik Bahaya ·{' '}

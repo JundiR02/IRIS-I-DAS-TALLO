@@ -39,7 +39,7 @@ export default function Sheet({ open, onClose, title, children, maxHeight = 82 }
           {title && <h2 className="text-base font-extrabold text-ink">{title}</h2>}
           <button
             onClick={onClose}
-            className="ml-auto grid h-8 w-8 place-items-center rounded-full bg-bone-200 text-ink-soft"
+            className="tap ml-auto grid h-8 w-8 place-items-center rounded-full bg-bone-200 text-ink-soft"
             aria-label="Tutup"
           >
             <X size={16} />

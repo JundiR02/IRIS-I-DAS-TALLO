@@ -8,33 +8,39 @@ export default {
         // krem hangat. Traffic-light tetap merah/kuning/hijau, tapi dalam
         // keluarga warna yang sama supaya tidak terasa seperti palet UI-kit
         // generik (lihat referensi kombinasi warna dari pengguna).
+        // Palet inti diambil dari logo: ARANG (#303030) + KAPUR (#F2F1EE),
+        // dengan tingkatan abu hangat di antaranya, dan MUSTARD sebagai satu-
+        // satunya aksen. Nama token lama (bone/ink/forest/river) dipertahankan
+        // supaya seluruh komponen ikut berubah tanpa disentuh satu per satu.
         bone: {
-          DEFAULT: '#F5EAD8',
-          50: '#FBF5EA',
-          100: '#F5EAD8',
-          200: '#E9D6B4',
-          300: '#DBBF91',
+          DEFAULT: '#F2F1EE',
+          50: '#F8F7F5',
+          100: '#F2F1EE',
+          200: '#E4E2DD',
+          300: '#D0CDC6',
         },
         ink: {
-          DEFAULT: '#1C2420',
-          soft: '#3E4A40',
-          muted: '#6E7A6D',
-          faint: '#9CA599',
+          DEFAULT: '#262626',
+          soft: '#454441',
+          muted: '#6A6863',
+          faint: '#8C8A85',
         },
+        // dulu hijau hutan — kini arang logo
         forest: {
-          DEFAULT: '#1F4A3D',
-          deep: '#12291F',
-          soft: '#7D9C8C',
+          DEFAULT: '#303030',
+          deep: '#1E1E1E',
+          soft: '#8C8A85',
         },
         lime: {
           DEFAULT: '#C7AE4C',
           bright: '#D6BE5C',
-          deep: '#A88F38',
+          deep: '#8A7428',
         },
+        // dulu biru sungai — kini abu arang menengah (bukan warna baru)
         river: {
-          DEFAULT: '#4C7C99',
-          deep: '#365C73',
-          mist: '#D9E2E2',
+          DEFAULT: '#4A4946',
+          deep: '#303030',
+          mist: '#E4E2DD',
         },
         // Traffic-light status system (prinsip dasar #2) — hijau tua bersahaja,
         // mustard-ochre, terakota. Bukan hijau/kuning/merah "stock" generik.
@@ -43,6 +49,8 @@ export default {
         bahaya: { DEFAULT: '#B84B31', ink: '#48170C', wash: '#F1DCD1' },
       },
       fontFamily: {
+        // Montserrat khusus untuk wordmark IRIS-I (lihat Logo.tsx).
+        brand: ['Montserrat', 'system-ui', 'sans-serif'],
         sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       borderRadius: {
@@ -51,10 +59,13 @@ export default {
         pill: '999px',
       },
       boxShadow: {
-        card: '0 8px 30px -8px rgba(27, 42, 34, 0.12)',
-        soft: '0 2px 10px -2px rgba(27, 42, 34, 0.08)',
-        lift: '0 16px 40px -12px rgba(27, 42, 34, 0.22)',
-        fab: '0 12px 28px -6px rgba(47, 93, 58, 0.45)',
+        // Kartu dalam alur halaman duduk rata — cukup garis tepi tipis.
+        // Bayangan sungguhan (lift/fab) hanya untuk yang melayang di atas
+        // konten: navigasi bawah, kartu di atas peta, sheet, modal, toast.
+        card: '0 0 0 1px rgba(48, 48, 48, 0.07)',
+        soft: '0 0 0 1px rgba(48, 48, 48, 0.06)',
+        lift: '0 16px 40px -12px rgba(48, 48, 48, 0.22)',
+        fab: '0 12px 28px -6px rgba(48, 48, 48, 0.4)',
       },
       keyframes: {
         'fade-up': {
@@ -81,6 +92,15 @@ export default {
           '0%': { transform: 'scale(0.8)', opacity: '0.7' },
           '100%': { transform: 'scale(2.4)', opacity: '0' },
         },
+        // Layar pembuka: peta pelan-pelan muncul, garis sungai tergambar dari hulu ke muara.
+        'peta-masuk': {
+          '0%': { opacity: '0', transform: 'scale(1.06)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        'garis-sungai': {
+          '0%': { strokeDashoffset: '1' },
+          '100%': { strokeDashoffset: '0' },
+        },
         wave: {
           '0%,100%': { transform: 'scaleY(0.35)' },
           '50%': { transform: 'scaleY(1)' },
@@ -92,7 +112,9 @@ export default {
         'slide-in': 'slide-in 0.3s ease-out both',
         'sheet-up': 'sheet-up 0.32s cubic-bezier(0.22, 1, 0.36, 1) both',
         'draw-check': 'draw-check 0.5s ease-out 0.15s both',
-        'pulse-ring': 'pulse-ring 1.8s ease-out infinite',
+        'pulse-ring': 'pulse-ring 1.8s ease-out 0.4s 3 both',
+        'peta-masuk': 'peta-masuk 1.8s cubic-bezier(0.16, 1, 0.3, 1) both',
+        'garis-sungai': 'garis-sungai 1.4s cubic-bezier(0.65, 0, 0.35, 1) 0.2s both',
       },
     },
   },

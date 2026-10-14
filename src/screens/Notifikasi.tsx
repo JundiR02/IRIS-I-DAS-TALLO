@@ -44,7 +44,7 @@ export default function Notifikasi() {
         right={
           <button
             onClick={() => actions.bacaNotif()}
-            className="flex items-center gap-1 rounded-pill bg-bone-200 px-2.5 py-1.5 text-[11px] font-bold text-ink-soft"
+            className="tap flex items-center gap-1 rounded-pill bg-bone-200 px-2.5 py-1.5 text-[11px] font-bold text-ink-soft"
           >
             <CheckCheck size={13} /> Tandai dibaca
           </button>

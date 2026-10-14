@@ -57,7 +57,7 @@ export default function Beranda() {
         right={
           <button
             onClick={() => navigate('/notifikasi')}
-            className="relative grid h-9 w-9 place-items-center rounded-full bg-bone-200 text-ink-soft"
+            className="tap grid h-9 w-9 place-items-center rounded-full bg-bone-200 text-ink-soft"
             aria-label="Notifikasi"
           >
             <Bell size={18} />
@@ -153,15 +153,15 @@ export default function Beranda() {
             </p>
             <button
               onClick={async () => {
-                actions.toast('Menyinkronkan…', '🔄')
+                actions.toast('Menyinkronkan…', 'info')
                 const hasil = await actions.sinkronkan()
                 if (hasil.berhasil > 0) {
-                  actions.toast(`${hasil.berhasil} laporan berhasil terkirim`, '✅')
+                  actions.toast(`${hasil.berhasil} laporan berhasil terkirim`, 'ok')
                 } else if (hasil.gagal > 0) {
-                  actions.toast('Masih belum ada sinyal — coba lagi nanti', '⚠️')
+                  actions.toast('Masih belum ada sinyal — coba lagi nanti', 'peringatan')
                 }
               }}
-              className="flex items-center gap-1 rounded-pill bg-white px-3 py-1.5 text-xs font-bold text-waspada-ink"
+              className="tap flex items-center gap-1 rounded-pill bg-white px-3 py-1.5 text-xs font-bold text-waspada-ink"
             >
               <RefreshCw size={12} /> Kirim
             </button>
@@ -198,8 +198,8 @@ export default function Beranda() {
         </div>
 
         {/* Feed */}
-        <div className="flex items-center justify-between px-1 pt-1">
-          <p className="text-[15px] font-extrabold text-ink">Laporan warga</p>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-1 pt-1">
+          <p className="whitespace-nowrap text-[15px] font-extrabold text-ink">Laporan warga</p>
           <Segmented
             value={filter}
             onChange={setFilter}

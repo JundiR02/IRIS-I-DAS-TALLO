@@ -99,7 +99,7 @@ export default function PostCard({ laporan }: { laporan: Laporan }) {
       <div className="flex items-center gap-1 px-3 py-2">
         <button
           onClick={() => actions.toggleSukaLaporan(laporan.id)}
-          className={`flex items-center gap-1.5 rounded-pill px-3 py-2 text-sm font-bold transition-colors ${
+          className={`flex items-center gap-1.5 min-h-11 rounded-pill px-3 py-2 text-sm font-bold transition-colors ${
             disukai ? 'text-bahaya' : 'text-ink-muted'
           }`}
         >
@@ -108,14 +108,14 @@ export default function PostCard({ laporan }: { laporan: Laporan }) {
         </button>
         <button
           onClick={() => navigate(`/diskusi/${laporan.id}`)}
-          className="flex items-center gap-1.5 rounded-pill px-3 py-2 text-sm font-bold text-ink-muted"
+          className="flex items-center gap-1.5 min-h-11 rounded-pill px-3 py-2 text-sm font-bold text-ink-muted"
         >
           <MessageCircle size={18} />
           {laporan.jumlahKomentar}
         </button>
         <button
           onClick={() => navigate(`/diskusi/${laporan.id}`)}
-          className="ml-auto rounded-pill bg-bone-100 px-3.5 py-2 text-xs font-bold text-ink-soft"
+          className="ml-auto min-h-11 rounded-pill bg-bone-100 px-4 py-2 text-xs font-bold text-ink-soft"
         >
           Diskusi
         </button>

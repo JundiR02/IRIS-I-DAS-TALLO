@@ -14,7 +14,7 @@ export default function MenungguPersetujuan() {
     setPesan(null)
     try {
       const ok = await actions.cekPersetujuan()
-      if (ok) actions.toast('Akun Anda sudah disetujui. Selamat datang!', '🎉')
+      if (ok) actions.toast('Akun Anda sudah disetujui. Selamat datang!', 'ok')
       else if (!diam) setPesan('Belum disetujui. Coba lagi nanti.')
     } catch {
       if (!diam) setPesan('Tidak bisa terhubung ke server. Periksa sinyal internet Anda.')

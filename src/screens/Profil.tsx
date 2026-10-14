@@ -5,6 +5,10 @@ import {
   Gift,
   Trophy,
   Sprout,
+  CalendarCheck,
+  Medal,
+  Waves,
+  Megaphone,
   Languages,
   WifiOff,
   BookOpen,
@@ -35,12 +39,12 @@ const RINCIAN_POIN = [
 ]
 
 const SEMUA_BADGE = [
-  { nama: 'Pelapor Baru', ikon: '🌱' },
-  { nama: 'Sigap 3 Hari', ikon: '⚡' },
-  { nama: 'Pelapor Rajin', ikon: '🏅' },
-  { nama: 'Sigap Banjir', ikon: '🌊' },
-  { nama: 'Penggerak Warga', ikon: '📣' },
-  { nama: '40 Hari Penuh', ikon: '🏆' },
+  { nama: 'Pelapor Baru', Ikon: Sprout },
+  { nama: 'Sigap 3 Hari', Ikon: CalendarCheck },
+  { nama: 'Pelapor Rajin', Ikon: Medal },
+  { nama: 'Sigap Banjir', Ikon: Waves },
+  { nama: 'Penggerak Warga', Ikon: Megaphone },
+  { nama: '40 Hari Penuh', Ikon: Trophy },
 ]
 
 export default function Profil() {
@@ -135,7 +139,7 @@ export default function Profil() {
         <div className="flex items-center gap-3.5 rounded-card bg-white p-4 shadow-card">
           <Avatar nama={me.nama} inisial={me.inisial} warna={me.warna} foto={me.fotoUrl} size={58} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-lg font-extrabold text-ink">{me.nama}</p>
+            <p className="text-lg font-extrabold leading-tight text-ink [overflow-wrap:anywhere]">{me.nama}</p>
             <p className="text-[12px] text-ink-muted">
               Titik {titik.nama} · Kel. {titik.kelurahan}
             </p>
@@ -154,7 +158,7 @@ export default function Profil() {
                 <button
                   onClick={() => setInfoPoinOpen(true)}
                   aria-label="Cara kerja poin"
-                  className="-my-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/20 active:bg-white/30"
+                  className="tap -my-1.5 grid h-7 w-7 place-items-center rounded-full bg-white/20 active:bg-white/30"
                 >
                   <Info size={13} />
                 </button>
@@ -189,7 +193,7 @@ export default function Profil() {
                     punya ? 'bg-lime/20' : 'bg-bone-100 opacity-50'
                   }`}
                 >
-                  <span className={`text-2xl ${punya ? '' : 'grayscale'}`}>{b.ikon}</span>
+                  <b.Ikon size={24} strokeWidth={1.8} aria-hidden className={punya ? 'text-ink' : 'text-ink-faint'} />
                   <span className="text-[10px] font-bold leading-tight text-ink-soft">{b.nama}</span>
                 </div>
               )
@@ -350,7 +354,7 @@ export default function Profil() {
                   <button
                     key={l}
                     onClick={() => actions.setLang(l)}
-                    className={`rounded-pill px-3 py-1 text-[11px] font-bold ${
+                    className={`tap rounded-pill px-3 py-1 text-[11px] font-bold ${
                       state.lang === l ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
                     }`}
                   >
@@ -373,10 +377,11 @@ export default function Profil() {
             </span>
             <button
               onClick={() => actions.setOffline(!state.offline)}
-              className={`h-6 w-11 rounded-full p-0.5 transition-colors ${
+              className={`tap h-6 w-11 rounded-full p-0.5 transition-colors ${
                 state.offline ? 'bg-forest' : 'bg-bone-300'
               }`}
               aria-pressed={state.offline}
+              aria-label="Mode offline"
             >
               <span
                 className={`block h-5 w-5 rounded-full bg-white transition-transform ${
@@ -388,7 +393,7 @@ export default function Profil() {
 
           <button
             onClick={() => navigate('/onboarding')}
-            className="flex w-full items-center justify-between border-t border-bone-100 py-2.5 text-[13px] font-semibold text-ink-soft"
+            className="flex w-full items-center justify-between border-t border-bone-100 py-3 text-[13px] font-semibold text-ink-soft"
           >
             <span className="flex items-center gap-2">
               <BookOpen size={16} /> Ulangi panduan
@@ -400,7 +405,7 @@ export default function Profil() {
             <>
               <button
                 onClick={() => setGantiSandiOpen(true)}
-                className="flex w-full items-center justify-between border-t border-bone-100 py-2.5 text-[13px] font-semibold text-ink-soft"
+                className="flex w-full items-center justify-between border-t border-bone-100 py-3 text-[13px] font-semibold text-ink-soft"
               >
                 <span className="flex items-center gap-2">
                   <KeyRound size={16} /> {pakaiPin ? 'Ganti PIN' : 'Ganti kata sandi'}
@@ -409,7 +414,7 @@ export default function Profil() {
               </button>
               <button
                 onClick={() => actions.logout()}
-                className="flex w-full items-center gap-2 border-t border-bone-100 py-2.5 text-[13px] font-semibold text-bahaya-ink"
+                className="flex w-full items-center gap-2 border-t border-bone-100 py-3 text-[13px] font-semibold text-bahaya-ink"
               >
                 <LogOut size={16} /> Keluar dari akun
               </button>

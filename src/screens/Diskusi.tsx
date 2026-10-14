@@ -21,7 +21,7 @@ export default function Diskusi() {
     const t = teks.trim()
     if (!t) return
     actions.tambahKomentar(id, t, mention)
-    actions.toast('Komentar terkirim', '💬')
+    actions.toast('Komentar terkirim', 'ok')
     setTeks('')
     setMention(undefined)
   }
@@ -75,7 +75,7 @@ export default function Diskusi() {
                   </p>
                   <button
                     onClick={() => actions.toggleSukaKomentar(k.id)}
-                    className={`mt-1.5 flex items-center gap-1 text-[12px] font-bold ${
+                    className={`tap mt-1.5 flex items-center gap-1 text-[12px] font-bold ${
                       disuka ? 'text-bahaya' : 'text-ink-faint'
                     }`}
                   >
@@ -89,12 +89,12 @@ export default function Diskusi() {
       </div>
 
       {/* Input komentar */}
-      <div className="border-t border-bone-200 bg-bone-50 px-3 py-2.5">
+      <div className="border-t border-bone-200 bg-bone-50 px-3 pb-[max(0.625rem,env(safe-area-inset-bottom))] pt-2.5">
         {mention && (
           <div className="mb-2 flex items-center gap-1.5">
             <span className="flex items-center gap-1 rounded-pill bg-forest/10 px-2 py-1 text-[11px] font-bold text-forest">
               @{mention}
-              <button onClick={() => setMention(undefined)} aria-label="Hapus tanda">
+              <button onClick={() => setMention(undefined)} aria-label="Hapus tanda" className="tap">
                 ×
               </button>
             </span>
@@ -103,7 +103,7 @@ export default function Diskusi() {
         <div className="flex items-end gap-2">
           <button
             onClick={() => setMention(mention ? undefined : 'Darmawati (Bu RT)')}
-            className={`grid h-10 w-10 shrink-0 place-items-center rounded-full ${
+            className={`tap grid h-10 w-10 shrink-0 place-items-center rounded-full ${
               mention ? 'bg-forest text-white' : 'bg-bone-200 text-ink-soft'
             }`}
             aria-label="Tandai warga"
@@ -115,7 +115,7 @@ export default function Diskusi() {
             onChange={(e) => setTeks(e.target.value)}
             rows={1}
             placeholder="Tulis komentar…"
-            className="max-h-24 min-h-[40px] flex-1 resize-none rounded-2xl border border-bone-200 bg-white px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest"
+            className="max-h-24 min-h-11 flex-1 resize-none rounded-2xl border border-bone-200 bg-white px-3.5 py-2.5 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault()
@@ -126,7 +126,7 @@ export default function Diskusi() {
           <button
             onClick={kirim}
             disabled={!teks.trim()}
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-forest text-white disabled:opacity-40"
+            className="tap grid h-10 w-10 shrink-0 place-items-center rounded-full bg-forest text-white disabled:opacity-40"
             aria-label="Kirim"
           >
             <Send size={17} />

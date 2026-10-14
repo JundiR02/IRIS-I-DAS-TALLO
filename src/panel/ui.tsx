@@ -4,17 +4,17 @@ import type { Peran } from '../lib/api'
 
 export const BTN = {
   primer:
-    'inline-flex items-center justify-center gap-1.5 rounded-pill bg-forest px-4 py-2 text-sm font-bold text-white hover:bg-forest-deep disabled:opacity-50',
+    'tap inline-flex items-center justify-center gap-1.5 rounded-pill bg-forest px-4 py-2 text-sm font-bold text-white hover:bg-forest-deep disabled:opacity-50',
   sekunder:
-    'inline-flex items-center justify-center gap-1.5 rounded-pill bg-bone-200 px-4 py-2 text-sm font-bold text-ink-soft hover:bg-bone-300 disabled:opacity-50',
+    'tap inline-flex items-center justify-center gap-1.5 rounded-pill bg-bone-200 px-4 py-2 text-sm font-bold text-ink-soft hover:bg-bone-300 disabled:opacity-50',
   bahaya:
-    'inline-flex items-center justify-center gap-1.5 rounded-pill bg-bahaya-wash px-4 py-2 text-sm font-bold text-bahaya-ink hover:bg-bahaya hover:text-white disabled:opacity-50',
+    'tap inline-flex items-center justify-center gap-1.5 rounded-pill bg-bahaya-wash px-4 py-2 text-sm font-bold text-bahaya-ink hover:bg-bahaya hover:text-white disabled:opacity-50',
   kecil:
-    'inline-flex items-center gap-1 rounded-pill bg-bone-100 px-2.5 py-1 text-[12px] font-bold text-ink-soft hover:bg-bone-200 disabled:opacity-50',
+    'tap inline-flex items-center gap-1 rounded-pill bg-bone-100 px-2.5 py-1 text-[12px] font-bold text-ink-soft hover:bg-bone-200 disabled:opacity-50',
 }
 
 export const INPUT =
-  'w-full rounded-xl border-2 border-bone-200 bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest'
+  'min-h-11 w-full rounded-xl border-2 border-bone-200 bg-white px-3 py-2 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-forest'
 
 export const LABEL = 'mb-1 block text-[12px] font-bold text-ink-soft'
 
@@ -46,7 +46,7 @@ export function Modal({
       >
         <div className="flex items-center gap-3 border-b border-bone-200 px-5 py-3.5">
           <h2 className="flex-1 text-base font-extrabold text-ink">{judul}</h2>
-          <button onClick={onTutup} className="grid h-8 w-8 place-items-center rounded-full hover:bg-bone-200" aria-label="Tutup">
+          <button onClick={onTutup} className="tap grid h-8 w-8 place-items-center rounded-full hover:bg-bone-200" aria-label="Tutup">
             <X size={17} />
           </button>
         </div>

@@ -21,6 +21,7 @@ import {
   Siren,
   ChevronLeft,
   CircleCheckBig,
+  CalendarClock,
 } from 'lucide-react'
 import { useApp } from '../store/store'
 import { titikById } from '../data/seed'
@@ -116,7 +117,9 @@ export default function Lapor() {
       <div className="flex min-h-0 flex-1 flex-col bg-bone-50">
         <FlowHeader onClose={() => navigate('/')} />
         <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-          <div className="grid h-20 w-20 place-items-center rounded-full bg-bone-200 text-3xl">🗓️</div>
+          <div className="grid h-20 w-20 place-items-center rounded-full bg-bone-200 text-ink">
+            <CalendarClock size={34} strokeWidth={1.8} aria-hidden />
+          </div>
           <h1 className="mt-5 text-xl font-extrabold text-ink">Belum giliran Anda hari ini</h1>
           <p className="mt-2 text-[14px] leading-relaxed text-ink-soft">
             Sistem menerima 1 laporan per hari secara bergilir. Giliran Anda berikutnya sekitar{' '}
@@ -130,7 +133,7 @@ export default function Lapor() {
           <div className="mt-7 w-full space-y-2.5">
             <button
               onClick={() => navigate('/')}
-              className="w-full rounded-pill bg-forest py-3.5 text-base font-extrabold text-white shadow-fab active:scale-[0.98]"
+              className="w-full rounded-pill bg-forest py-3.5 text-base font-extrabold text-white active:scale-[0.98]"
             >
               Kembali ke Beranda
             </button>
@@ -514,7 +517,7 @@ export default function Lapor() {
 
             <button
               onClick={kirim}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white shadow-fab active:scale-[0.98]"
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-pill bg-forest py-4 text-base font-extrabold text-white active:scale-[0.98]"
             >
               <CircleCheckBig size={18} /> Kirim Laporan
             </button>
@@ -542,7 +545,7 @@ function FlowHeader({
     <div className="flex items-center gap-3 px-4 pb-2 pt-4">
       <button
         onClick={onBack ?? onClose}
-        className="grid h-9 w-9 place-items-center rounded-full bg-bone-200 text-ink-soft active:scale-95"
+        className="tap grid h-9 w-9 place-items-center rounded-full bg-bone-200 text-ink-soft active:scale-95"
         aria-label={onBack ? 'Kembali' : 'Tutup'}
       >
         {onBack ? <ChevronLeft size={20} /> : <X size={18} />}
@@ -700,7 +703,7 @@ function Recorder({ value, onChange }: { value: number | null; onChange: (v: num
         {!recording && value === null && (
           <button
             onClick={mulai}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-bahaya text-white shadow-fab active:scale-95"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-bahaya text-white active:scale-95"
             aria-label="Mulai merekam"
           >
             <Mic size={26} />
@@ -709,7 +712,7 @@ function Recorder({ value, onChange }: { value: number | null; onChange: (v: num
         {recording && (
           <button
             onClick={stop}
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-ink text-white shadow-fab active:scale-95"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-ink text-white active:scale-95"
             aria-label="Berhenti"
           >
             <Square size={22} className="fill-white" />

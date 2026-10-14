@@ -15,10 +15,10 @@ import ProfilSaya from './ProfilSaya'
 import { BadgePeran, Modal } from './ui'
 
 const NAV = [
-  { to: '/panel', label: 'Ringkasan', Ikon: LayoutDashboard, end: true, admin: false },
-  { to: '/panel/laporan', label: 'Laporan & Verifikasi', Ikon: ClipboardCheck, end: false, admin: false },
-  { to: '/panel/komentar', label: 'Komentar', Ikon: MessagesSquare, end: false, admin: false },
-  { to: '/panel/pengguna', label: 'Pengguna', Ikon: Users, end: false, admin: true },
+  { to: '/panel', label: 'Ringkasan', pendek: 'Ringkasan', Ikon: LayoutDashboard, end: true, admin: false },
+  { to: '/panel/laporan', label: 'Laporan & Verifikasi', pendek: 'Laporan', Ikon: ClipboardCheck, end: false, admin: false },
+  { to: '/panel/komentar', label: 'Komentar', pendek: 'Komentar', Ikon: MessagesSquare, end: false, admin: false },
+  { to: '/panel/pengguna', label: 'Pengguna', pendek: 'Pengguna', Ikon: Users, end: false, admin: true },
 ]
 
 function KerangkaPanel() {
@@ -34,50 +34,56 @@ function KerangkaPanel() {
       {/* Sidebar (desktop) / bilah atas (HP) */}
       <aside className="shrink-0 bg-forest-deep text-white lg:flex lg:w-64 lg:flex-col">
         <div className="flex items-center gap-3 px-4 py-3 lg:px-5 lg:py-5">
-          <span className="rounded-xl bg-bone-50 px-2 py-1.5">
-            <Logo size={26} />
-          </span>
-          <span className="text-[11px] font-bold uppercase tracking-wider text-white/60">Panel</span>
-          <button onClick={() => setUbahProfil(true)} className="ml-auto lg:hidden" aria-label="Profil saya">
+          <Logo size={28} tema="terang" />
+          <span className="text-[11px] font-bold uppercase tracking-wider text-white/60 max-[359px]:hidden">Panel</span>
+          <button onClick={() => setUbahProfil(true)} className="tap ml-auto rounded-full lg:hidden" aria-label="Profil saya">
             <Avatar nama={sesi.akun.nama} inisial={sesi.akun.inisial} warna={sesi.akun.warna} foto={sesi.akun.fotoUrl} size={36} />
           </button>
           <button
             onClick={() => setGantiSandi(true)}
-            className="grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
+            className="tap grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
             aria-label="Ganti kata sandi"
           >
             <KeyRound size={16} />
           </button>
           <button
             onClick={() => keluar()}
-            className="grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
+            className="tap grid h-9 w-9 place-items-center rounded-full bg-white/10 lg:hidden"
             aria-label="Keluar"
           >
             <LogOut size={16} />
           </button>
         </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-0">
-          {nav.map(({ to, label, Ikon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-bold transition-colors ${
-                  isActive ? 'bg-white text-forest-deep' : 'text-white/75 hover:bg-white/10 hover:text-white'
-                }`
-              }
-            >
-              <Ikon size={17} />
-              <span className="whitespace-nowrap">{label}</span>
-              {to === '/panel/laporan' && !!ringkasan?.laporanMenunggu && (
-                <span className="ml-auto rounded-pill bg-waspada px-1.5 text-[11px] text-white">{ringkasan.laporanMenunggu}</span>
-              )}
-              {to === '/panel/pengguna' && !!ringkasan?.pendaftarMenunggu && (
-                <span className="ml-auto rounded-pill bg-waspada px-1.5 text-[11px] text-white">{ringkasan.pendaftarMenunggu}</span>
-              )}
-            </NavLink>
-          ))}
+        <nav
+          className={`grid gap-1 px-3 pb-3 sm:flex sm:flex-wrap lg:flex-1 lg:flex-nowrap lg:flex-col lg:pb-0 ${
+            nav.length > 3 ? 'grid-cols-4' : 'grid-cols-3'
+          }`}
+        >
+          {nav.map(({ to, label, pendek, Ikon, end }) => {
+            const jumlah =
+              to === '/panel/laporan' ? ringkasan?.laporanMenunggu : to === '/panel/pengguna' ? ringkasan?.pendaftarMenunggu : 0
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                end={end}
+                className={({ isActive }) =>
+                  `relative flex min-h-11 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 py-2 text-[11px] font-bold transition-colors sm:flex-row sm:gap-2.5 sm:px-3 sm:py-2.5 sm:text-sm lg:justify-start ${
+                    isActive ? 'bg-white text-forest-deep' : 'text-white/75 hover:bg-white/10 hover:text-white'
+                  }`
+                }
+              >
+                <Ikon size={17} className="shrink-0" />
+                <span className="max-w-full truncate sm:hidden">{pendek}</span>
+                <span className="hidden whitespace-nowrap sm:inline">{label}</span>
+                {!!jumlah && (
+                  <span className="absolute right-1.5 top-1 rounded-pill bg-waspada px-1.5 text-[11px] text-white sm:static sm:ml-auto">
+                    {jumlah}
+                  </span>
+                )}
+              </NavLink>
+            )
+          })}
         </nav>
         <div className="hidden border-t border-white/10 p-4 lg:block">
           <button
@@ -96,17 +102,17 @@ function KerangkaPanel() {
           </button>
           <button
             onClick={() => setGantiSandi(true)}
-            className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20"
+            className="mt-3 flex w-full tap items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2.5 text-[12px] font-bold hover:bg-white/20"
           >
             <KeyRound size={13} /> Ganti kata sandi
           </button>
           <div className="mt-2 flex gap-2">
-            <a href="#/" className="flex flex-1 items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20">
+            <a href="#/" className="flex flex-1 tap items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2.5 text-[12px] font-bold hover:bg-white/20">
               <Smartphone size={13} /> Aplikasi
             </a>
             <button
               onClick={() => keluar()}
-              className="flex flex-1 items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2 text-[12px] font-bold hover:bg-white/20"
+              className="flex flex-1 tap items-center justify-center gap-1.5 rounded-pill bg-white/10 py-2.5 text-[12px] font-bold hover:bg-white/20"
             >
               <LogOut size={13} /> Keluar
             </button>
@@ -121,7 +127,7 @@ function KerangkaPanel() {
             <button
               onClick={() => void muatUlang()}
               disabled={memuat}
-              className="inline-flex items-center gap-1.5 rounded-pill bg-white px-3 py-1.5 text-[12px] font-bold text-ink-soft shadow-soft disabled:opacity-60"
+              className="tap inline-flex items-center gap-1.5 rounded-pill bg-white px-3 py-1.5 text-[12px] font-bold text-ink-soft shadow-soft disabled:opacity-60"
             >
               <RefreshCw size={13} className={memuat ? 'animate-spin' : ''} /> {memuat ? 'Memuat…' : 'Muat ulang'}
             </button>

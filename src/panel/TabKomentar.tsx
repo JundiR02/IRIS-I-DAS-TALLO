@@ -71,7 +71,7 @@ export default function TabKomentar() {
             <button
               key={v}
               onClick={() => setFilter(v)}
-              className={`rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
+              className={`tap rounded-pill px-3 py-1.5 text-[12.5px] font-bold ${
                 filter === v ? 'bg-white text-ink shadow-soft' : 'text-ink-muted'
               }`}
             >
