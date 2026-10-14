@@ -54,7 +54,10 @@ body {
 
 /* Screen enter transition used by the router outlet */
 .screen-enter {
-  animation: screen-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* "backwards", bukan "both": transform tidak boleh menempel setelah animasi
+     selesai — kalau menempel, layar jadi stacking context sendiri dan sheet
+     (z-40) di dalamnya tertimpa navigasi bawah (z-30). */
+  animation: screen-in 0.28s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 @keyframes screen-in {
   from {
